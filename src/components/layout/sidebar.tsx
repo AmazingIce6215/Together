@@ -12,7 +12,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useUIStore } from "@/lib/store/ui-store";
-import { signOut } from "@/actions/auth.actions";
+import { createClient } from "@/lib/supabase/client";
+
+async function handleSignOut() {
+  const supabase = createClient();
+  await supabase.auth.signOut();
+  window.location.href = "/login";
+}
 
 interface NavItem {
   label: string;
@@ -71,7 +77,7 @@ export function Sidebar() {
 
       <div className="border-t border-zinc-800/50 p-2">
         <button
-          onClick={signOut}
+          onClick={handleSignOut}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-300"
         >
           <LogOut className="h-4 w-4 shrink-0" />
