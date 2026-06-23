@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useQuizStore } from "@/lib/store/quiz-store";
-import { getQuestions, getSessionQuestions, getResponsesForQuestion, submitAnswer } from "@/actions/quiz.actions";
+import {
+  getQuestions,
+  getSessionQuestions,
+  getResponsesForQuestion,
+  submitAnswer,
+} from "@/actions/quiz.actions";
 import { QuestionCard } from "@/components/quiz/question-card";
 import { AnswerReveal } from "@/components/quiz/answer-reveal";
 import { ScoreDisplay } from "@/components/quiz/score-display";
@@ -36,12 +41,37 @@ export function GameBoard({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [fetchedSessionResponses, setFetchedSessionResponses] = useState(false);
+
+  const userIdRef = useRef<string | null>(null);
+
+  // Derive myAnswer and partnerAnswer from per-question store
+  const currentQuestionId = currentQuestion?.id;
+  const answersForCurrent = currentQuestionId
+    ? store.answersByQuestion[currentQuestionId] || []
+    : [];
+  const myAnswer = useMemo(() => {
+    if (!userIdRef.current) return null;
+    const mine = answersForCurrent.find(
+      (a) => a.user_id === userIdRef.current
+    );
+    return mine?.answer ?? null;
+  }, [answersForCurrent]);
+  const partnerAnswer = useMemo(() => {
+    if (!userIdRef.current) return null;
+    const partner = answersForCurrent.find(
+      (a) => a.user_id !== userIdRef.current
+    );
+    return partner ?? null;
+  }, [answersForCurrent]);
 
   // Fetch current user
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user ? { id: data.user.id } : null);
+      const u = data.user ? { id: data.user.id } : null;
+      setUser(u);
+      userIdRef.current = u?.id ?? null;
     });
   }, []);
 
@@ -49,10 +79,9 @@ export function GameBoard({
   useEffect(() => {
     async function init() {
       try {
-        let questions;
+        let questions: Question[];
 
         if (sessionId) {
-          // Joining an existing session — load the same questions
           questions = await getSessionQuestions(sessionId);
         } else {
           questions = await getQuestions(categoryId, mode);
@@ -90,7 +119,30 @@ export function GameBoard({
     init();
   }, [categoryId, mode, sessionId]);
 
-  // Subscribe to real-time responses
+  // Load existing responses for session (catches answers submitted while partner was on a different question)
+  useEffect(() => {
+    if (!sessionId || fetchedSessionResponses) return;
+
+    const supabase = createClient();
+    const fetchExisting = async () => {
+      const { data } = await supabase
+        .from("quiz_responses")
+        .select("user_id, answer, question_id")
+        .eq("session_id", sessionId);
+      if (data) {
+        for (const r of data) {
+          store.addAnswer(r.question_id, {
+            user_id: r.user_id,
+            answer: r.answer,
+          });
+        }
+      }
+    };
+    fetchExisting();
+    setFetchedSessionResponses(true);
+  }, [sessionId, fetchedSessionResponses]);
+
+  // Subscribe to real-time responses — collect ALL answers by question_id
   useEffect(() => {
     if (!sessionId) return;
 
@@ -100,7 +152,7 @@ export function GameBoard({
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "quiz_responses",
           filter: `session_id=eq.${sessionId}`,
@@ -111,16 +163,12 @@ export function GameBoard({
             answer: string;
             question_id: string;
           };
+          if (!response?.user_id) return;
 
-          if (
-            response.user_id !== user?.id &&
-            response.question_id === currentQuestion?.id
-          ) {
-            store.setPartnerAnswer({
-              user_id: response.user_id,
-              answer: response.answer,
-            });
-          }
+          store.addAnswer(response.question_id, {
+            user_id: response.user_id,
+            answer: response.answer,
+          });
         }
       )
       .subscribe();
@@ -128,23 +176,27 @@ export function GameBoard({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId, currentQuestion?.id, user?.id]);
+  }, [sessionId]);
 
   // Detect when both answered
   useEffect(() => {
-    if (store.myAnswer && store.partnerAnswer && !store.isRevealed) {
+    if (myAnswer && partnerAnswer && !store.isRevealed) {
       const timer = setTimeout(() => {
         store.revealAnswers();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [store.myAnswer, store.partnerAnswer, store.isRevealed]);
+  }, [myAnswer, partnerAnswer, store.isRevealed]);
 
   const handleAnswer = useCallback(
     async (answer: string) => {
-      if (!sessionId || !currentQuestion || store.myAnswer) return;
+      if (!sessionId || !currentQuestion || !userIdRef.current) return;
+      if (myAnswer) return;
 
-      store.setMyAnswer(answer);
+      store.addAnswer(currentQuestion.id, {
+        user_id: userIdRef.current,
+        answer,
+      });
 
       try {
         await submitAnswer(sessionId, currentQuestion.id, answer);
@@ -152,7 +204,7 @@ export function GameBoard({
         // If the submit fails, we still show the answer locally
       }
     },
-    [sessionId, currentQuestion, store.myAnswer]
+    [sessionId, currentQuestion, myAnswer]
   );
 
   const handleNextQuestion = useCallback(() => {
@@ -200,7 +252,7 @@ export function GameBoard({
 
   if (!currentQuestion) return null;
 
-  const partnerAnswered = !!store.partnerAnswer;
+  const partnerAnswered = !!partnerAnswer;
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
@@ -235,15 +287,15 @@ export function GameBoard({
           <QuestionCard
             question={currentQuestion}
             mode={mode}
-            selectedAnswer={store.myAnswer}
+            selectedAnswer={myAnswer}
             onAnswer={handleAnswer}
-            disabled={!!store.myAnswer}
+            disabled={!!myAnswer}
           />
         </motion.div>
       </AnimatePresence>
 
       {/* Partner status */}
-      {store.myAnswer && !store.isRevealed && (
+      {myAnswer && !store.isRevealed && (
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -261,8 +313,8 @@ export function GameBoard({
       {/* Answer reveal */}
       {store.isRevealed && (
         <AnswerReveal
-          myAnswer={store.myAnswer!}
-          partnerAnswer={store.partnerAnswer!.answer}
+          myAnswer={myAnswer!}
+          partnerAnswer={partnerAnswer!.answer}
           question={currentQuestion}
           mode={mode}
           onNext={handleNextQuestion}

@@ -18,16 +18,15 @@ interface QuizState {
   sessionId: string | null;
   questions: Question[];
   currentIndex: number;
-  myAnswer: string | null;
-  partnerAnswer: PlayerAnswer | null;
+  answersByQuestion: Record<string, PlayerAnswer[]>;
   scores: Record<string, number>;
   isRevealed: boolean;
   isComplete: boolean;
 
   setSessionId: (id: string) => void;
   setQuestions: (questions: Question[]) => void;
-  setMyAnswer: (answer: string) => void;
-  setPartnerAnswer: (answer: PlayerAnswer) => void;
+  setCurrentIndex: (index: number) => void;
+  addAnswer: (questionId: string, answer: PlayerAnswer) => void;
   revealAnswers: () => void;
   nextQuestion: () => void;
   addScore: (userId: string, points: number) => void;
@@ -39,22 +38,34 @@ export const useQuizStore = create<QuizState>((set) => ({
   sessionId: null,
   questions: [],
   currentIndex: 0,
-  myAnswer: null,
-  partnerAnswer: null,
+  answersByQuestion: {},
   scores: {},
   isRevealed: false,
   isComplete: false,
 
   setSessionId: (id) => set({ sessionId: id }),
   setQuestions: (questions) => set({ questions }),
-  setMyAnswer: (answer) => set({ myAnswer: answer }),
-  setPartnerAnswer: (answer) => set({ partnerAnswer: answer }),
+  setCurrentIndex: (index) => set({ currentIndex: index }),
+  addAnswer: (questionId, answer) =>
+    set((state) => {
+      const existing = state.answersByQuestion[questionId] || [];
+      const idx = existing.findIndex((a) => a.user_id === answer.user_id);
+      if (idx >= 0) {
+        const updated = [...existing];
+        updated[idx] = answer;
+        return { answersByQuestion: { ...state.answersByQuestion, [questionId]: updated } };
+      }
+      return {
+        answersByQuestion: {
+          ...state.answersByQuestion,
+          [questionId]: [...existing, answer],
+        },
+      };
+    }),
   revealAnswers: () => set({ isRevealed: true }),
   nextQuestion: () =>
     set((state) => ({
       currentIndex: state.currentIndex + 1,
-      myAnswer: null,
-      partnerAnswer: null,
       isRevealed: false,
     })),
   addScore: (userId, points) =>
@@ -70,8 +81,7 @@ export const useQuizStore = create<QuizState>((set) => ({
       sessionId: null,
       questions: [],
       currentIndex: 0,
-      myAnswer: null,
-      partnerAnswer: null,
+      answersByQuestion: {},
       scores: {},
       isRevealed: false,
       isComplete: false,
