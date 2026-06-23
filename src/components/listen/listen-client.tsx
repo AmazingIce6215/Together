@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Howl } from "howler";
+import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 import { useListenStore } from "@/lib/store/listen-store";
 import {
@@ -28,46 +29,46 @@ interface ListenClientProps {
 
 export function ListenClient({ initialSession }: ListenClientProps) {
   const store = useListenStore();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user, isLoaded } = useUser();
   const [partner, setPartner] = useState<{ id: string; display_name: string | null } | null>(null);
   const [showTracks, setShowTracks] = useState(false);
 
   const howlRef = useRef<Howl | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Initialize from server
   useEffect(() => {
     if (initialSession) {
       store.setSession(initialSession);
     }
   }, [initialSession]);
 
-  // Get current user + partner info
+  // Load partner info
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserId(user.id);
-    });
-    if (initialSession) {
-      const supabase = createClient();
-      supabase
-        .from("couple_members")
-        .select("user_id, profiles:user_id(display_name)")
-        .eq("couple_id", initialSession.couple_id)
-        .then(({ data }) => {
-          if (data) {
-            const me = data.find((m: { user_id: string; profiles: unknown }) => m.user_id === userId);
-            const them = data.find((m: { user_id: string; profiles: unknown }) => m.user_id !== userId);
-            if (them) {
-              const profile = them.profiles as unknown as { display_name: string | null } | null;
-              setPartner({ id: them.user_id, display_name: profile?.display_name || null });
-            }
-          }
-        });
-    }
-  }, [initialSession, userId]);
+    if (!isLoaded || !user || !initialSession) return;
 
-  // Create/release Howl when ambient changes
+    const supabase = createClient();
+    supabase
+      .from("couple_members")
+      .select("user_id, profiles:user_id(display_name)")
+      .eq("couple_id", initialSession.couple_id)
+      .then(({ data }) => {
+        if (data) {
+          const them = data.find(
+            (m: { user_id: string; profiles: unknown }) => m.user_id !== user.id
+          );
+          if (them) {
+            const profile = them.profiles as unknown as {
+              display_name: string | null;
+            } | null;
+            setPartner({
+              id: them.user_id,
+              display_name: profile?.display_name || null,
+            });
+          }
+        }
+      });
+  }, [initialSession, user, isLoaded]);
+
   useEffect(() => {
     if (howlRef.current) {
       howlRef.current.unload();
@@ -121,14 +122,12 @@ export function ListenClient({ initialSession }: ListenClientProps) {
     };
   }, [store.currentAmbient?.id]);
 
-  // Sync volume changes to howl
   useEffect(() => {
     if (howlRef.current) {
       howlRef.current.volume(store.volume * (store.isMuted ? 0 : 1));
     }
   }, [store.volume, store.isMuted]);
 
-  // Subscribe to real-time session changes
   useEffect(() => {
     const supabase = createClient();
 
@@ -255,7 +254,6 @@ export function ListenClient({ initialSession }: ListenClientProps) {
         )}
       </div>
 
-      {/* Track selection grid */}
       {showTracks && (
         <TrackList
           sounds={AMBIENT_SOUNDS}
@@ -264,7 +262,6 @@ export function ListenClient({ initialSession }: ListenClientProps) {
         />
       )}
 
-      {/* Player controls */}
       {store.sessionId && (
         <PlayerBar
           currentAmbient={store.currentAmbient}
@@ -279,18 +276,20 @@ export function ListenClient({ initialSession }: ListenClientProps) {
         />
       )}
 
-      {/* Partner status */}
       <PartnerStatus
         partnerName={partner?.display_name || "Partner"}
         currentAmbient={store.currentAmbient}
         status={store.status}
       />
 
-      {/* Audio files not found message */}
       {store.currentAmbient && (
         <div className="rounded-xl border border-amber-900/30 bg-amber-950/10 px-4 py-3">
           <p className="text-xs text-amber-400/80">
-            Add audio files to <code className="rounded bg-zinc-900 px-1.5 py-0.5">public/audio/ambient/</code> to enable playback.{" "}
+            Add audio files to{" "}
+            <code className="rounded bg-zinc-900 px-1.5 py-0.5">
+              public/audio/ambient/
+            </code>{" "}
+            to enable playback.{" "}
             <a
               href="https://pixabay.com/music/search/genre/ambient/"
               target="_blank"

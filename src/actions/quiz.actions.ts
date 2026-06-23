@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getCategories() {
@@ -15,7 +16,7 @@ export async function getCategories() {
 export async function getQuestions(categoryId: string, mode: string) {
   const supabase = await createClient();
 
-  const couple = await getCoupleId(supabase);
+  const couple = await getCoupleId();
   if (!couple) return [];
 
   const { data } = await supabase
@@ -28,14 +29,12 @@ export async function getQuestions(categoryId: string, mode: string) {
 }
 
 export async function createQuizSession(categoryId: string, mode: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
+
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const couple = await getCoupleId(supabase);
+  const couple = await getCoupleId();
   if (!couple) throw new Error("No couple found");
 
   const questions = await getQuestions(categoryId, mode);
@@ -51,7 +50,7 @@ export async function createQuizSession(categoryId: string, mode: string) {
       status: "in_progress",
       questions: questionIds,
       scores: {},
-      created_by: user.id,
+      created_by: userId,
     })
     .select()
     .single();
@@ -66,18 +65,16 @@ export async function submitAnswer(
   questionId: string,
   answer: string
 ) {
-  const supabase = await createClient();
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  const supabase = await createClient();
 
   const { error } = await supabase.from("quiz_responses").upsert(
     {
       session_id: sessionId,
       question_id: questionId,
-      user_id: user.id,
+      user_id: userId,
       answer,
     },
     { onConflict: "session_id,question_id,user_id" }
@@ -111,16 +108,16 @@ export async function getResponsesForQuestion(
   return data || [];
 }
 
-async function getCoupleId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+async function getCoupleId() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const supabase = await createClient();
 
   const { data: member } = await supabase
     .from("couple_members")
     .select("couple_id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   return member?.couple_id || null;

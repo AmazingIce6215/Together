@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 import { useFocusStore } from "@/lib/store/focus-store";
 import { createFocusSession, updateFocusTask, updateFocusGoal } from "@/actions/focus.actions";
@@ -37,39 +38,30 @@ interface FocusClientProps {
 
 export function FocusClient({ initialSession }: FocusClientProps) {
   const store = useFocusStore();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user, isLoaded } = useUser();
   const [partner, setPartner] = useState<Participant | null>(null);
   const [me, setMe] = useState<Participant | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Initialize from server data
   useEffect(() => {
     if (initialSession) {
       store.setSession(initialSession);
     }
   }, [initialSession]);
 
-  // Get current user
+  // Identify me and partner from session data
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUserId(user.id);
-        if (initialSession) {
-          const myPart = initialSession.participants.find(
-            (p) => p.user_id === user.id
-          );
-          const partnerPart = initialSession.participants.find(
-            (p) => p.user_id !== user.id
-          );
-          if (myPart) setMe(myPart);
-          if (partnerPart) setPartner(partnerPart);
-        }
-      }
-    });
-  }, [initialSession]);
+    if (!isLoaded || !user || !initialSession) return;
+    const myPart = initialSession.participants.find(
+      (p) => p.user_id === user.id
+    );
+    const partnerPart = initialSession.participants.find(
+      (p) => p.user_id !== user.id
+    );
+    if (myPart) setMe(myPart);
+    if (partnerPart) setPartner(partnerPart);
+  }, [initialSession, user, isLoaded]);
 
-  // Tick every second when running
   useEffect(() => {
     if (store.isRunning) {
       intervalRef.current = setInterval(() => {
@@ -85,7 +77,6 @@ export function FocusClient({ initialSession }: FocusClientProps) {
     };
   }, [store.isRunning, store.tick]);
 
-  // Subscribe to real-time focus updates
   useEffect(() => {
     const supabase = createClient();
 
@@ -119,7 +110,7 @@ export function FocusClient({ initialSession }: FocusClientProps) {
         },
         (payload) => {
           const p = payload.new as Participant;
-          if (p.user_id === userId) {
+          if (p.user_id === user?.id) {
             setMe(p);
           } else {
             setPartner(p);
@@ -131,7 +122,7 @@ export function FocusClient({ initialSession }: FocusClientProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [user?.id]);
 
   const handleStart = useCallback(async () => {
     try {
@@ -160,7 +151,6 @@ export function FocusClient({ initialSession }: FocusClientProps) {
     if (me) setMe({ ...me, goal });
   }, [me]);
 
-  // No active session — show start screen
   if (!store.sessionId) {
     return (
       <div className="flex flex-col items-center justify-center gap-8 p-6 pt-20">
@@ -199,7 +189,6 @@ export function FocusClient({ initialSession }: FocusClientProps) {
         </p>
       </div>
 
-      {/* Timer */}
       <TimerDisplay
         remainingSeconds={store.remainingSeconds}
         status={store.status}
@@ -210,7 +199,6 @@ export function FocusClient({ initialSession }: FocusClientProps) {
         breakDuration={store.breakDuration}
       />
 
-      {/* Partner status */}
       <div className="grid gap-4 sm:grid-cols-2">
         {me && (
           <GoalInput
@@ -230,10 +218,8 @@ export function FocusClient({ initialSession }: FocusClientProps) {
         )}
       </div>
 
-      {/* Partner card */}
       {partner && <PartnerCard participant={partner} />}
 
-      {/* Stats */}
       {me && <StatsPanel me={me} />}
     </div>
   );

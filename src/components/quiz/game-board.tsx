@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 import { useQuizStore } from "@/lib/store/quiz-store";
 import { getQuestions, getResponsesForQuestion, submitAnswer } from "@/actions/quiz.actions";
@@ -32,6 +33,7 @@ export function GameBoard({
   onSessionCreated,
 }: GameBoardProps) {
   const store = useQuizStore();
+  const { user } = useUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
@@ -73,55 +75,45 @@ export function GameBoard({
     init();
   }, [categoryId, mode]);
 
-  // Subscribe to real-time responses and current user
+  // Subscribe to real-time responses
   useEffect(() => {
     if (!sessionId) return;
 
     const supabase = createClient();
+    const channel = supabase
+      .channel(`quiz-session-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "quiz_responses",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        async (payload) => {
+          const response = payload.new as {
+            user_id: string;
+            answer: string;
+            question_id: string;
+          };
 
-    // Get current user
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
+          if (
+            response.user_id !== user?.id &&
+            response.question_id === currentQuestion?.id
+          ) {
+            store.setPartnerAnswer({
+              user_id: response.user_id,
+              answer: response.answer,
+            });
+          }
+        }
+      )
+      .subscribe();
 
-      if (user) {
-        // Subscribe to quiz_responses for this session
-        const channel = supabase
-          .channel(`quiz-session-${sessionId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "quiz_responses",
-              filter: `session_id=eq.${sessionId}`,
-            },
-            async (payload) => {
-              const response = payload.new as {
-                user_id: string;
-                answer: string;
-                question_id: string;
-              };
-
-              // If partner answered and it matches current question
-              if (
-                response.user_id !== user.id &&
-                response.question_id === currentQuestion?.id
-              ) {
-                store.setPartnerAnswer({
-                  user_id: response.user_id,
-                  answer: response.answer,
-                });
-              }
-            }
-          )
-          .subscribe();
-
-        return () => {
-          supabase.removeChannel(channel);
-        };
-      }
-    });
-  }, [sessionId, currentQuestion?.id]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId, currentQuestion?.id, user?.id]);
 
   // Detect when both answered
   useEffect(() => {

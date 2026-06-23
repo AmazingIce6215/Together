@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Together — A space for two",
-  description: "A private online space for long-distance couples to spend quality time together.",
+  description:
+    "A private online space for long-distance couples to spend quality time together.",
 };
 
 export default function RootLayout({
@@ -23,10 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-dvh bg-black text-zinc-100 antialiased">
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html
+        lang="en"
+        className={`${geistSans.variable} ${geistMono.variable}`}
+      >
+        <body className="min-h-dvh bg-black text-zinc-100 antialiased">
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -1,32 +1,31 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 
-async function getCoupleId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+async function getCoupleId() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const supabase = await createClient();
 
   const { data: member } = await supabase
     .from("couple_members")
     .select("couple_id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   return member?.couple_id || null;
 }
 
 export async function createFocusSession() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
+
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const couple = await getCoupleId(supabase);
+  const couple = await getCoupleId();
   if (!couple) throw new Error("No couple found");
 
   const { data: session, error } = await supabase
@@ -40,17 +39,16 @@ export async function createFocusSession() {
       sessions_before_long_break: 4,
       current_session: 1,
       started_at: new Date().toISOString(),
-      created_by: user.id,
+      created_by: userId,
     })
     .select()
     .single();
 
   if (error) throw error;
 
-  // Join the session
   await supabase.from("focus_participants").insert({
     session_id: session.id,
-    user_id: user.id,
+    user_id: userId,
     status: "focusing",
   });
 
@@ -59,14 +57,12 @@ export async function createFocusSession() {
 }
 
 export async function getActiveSession() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const couple = await getCoupleId(supabase);
+  const couple = await getCoupleId();
   if (!couple) return null;
 
   const { data: session } = await supabase
@@ -89,17 +85,15 @@ export async function getActiveSession() {
 }
 
 export async function updateFocusTask(task: string) {
-  const supabase = await createClient();
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  const supabase = await createClient();
 
   const { data: participant } = await supabase
     .from("focus_participants")
     .select("id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("joined_at", { ascending: false })
     .limit(1)
     .single();
@@ -115,17 +109,15 @@ export async function updateFocusTask(task: string) {
 }
 
 export async function updateFocusGoal(goal: string) {
-  const supabase = await createClient();
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  const supabase = await createClient();
 
   const { data: participant } = await supabase
     .from("focus_participants")
     .select("id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("joined_at", { ascending: false })
     .limit(1)
     .single();

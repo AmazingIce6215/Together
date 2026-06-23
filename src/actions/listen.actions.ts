@@ -1,32 +1,31 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 
-async function getCoupleId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+async function getCoupleId() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const supabase = await createClient();
 
   const { data: member } = await supabase
     .from("couple_members")
     .select("couple_id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   return member?.couple_id || null;
 }
 
 export async function createListenSession() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
+
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const couple = await getCoupleId(supabase);
+  const couple = await getCoupleId();
   if (!couple) throw new Error("No couple found");
 
   const { data: session, error } = await supabase
@@ -34,7 +33,7 @@ export async function createListenSession() {
     .insert({
       couple_id: couple,
       status: "idle",
-      created_by: user.id,
+      created_by: userId,
     })
     .select()
     .single();
@@ -46,14 +45,12 @@ export async function createListenSession() {
 }
 
 export async function getActiveSession() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const couple = await getCoupleId(supabase);
+  const couple = await getCoupleId();
   if (!couple) return null;
 
   const { data: session } = await supabase
@@ -74,19 +71,19 @@ export async function updatePlaybackState(playback: {
   currentAmbientId?: string | null;
   progressMs?: number;
 }) {
-  const supabase = await createClient();
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  const supabase = await createClient();
 
   const updates: Record<string, unknown> = {
     status: playback.status,
     updated_at: new Date().toISOString(),
   };
-  if (playback.currentAmbientId !== undefined) updates.current_ambient_id = playback.currentAmbientId;
-  if (playback.progressMs !== undefined) updates.progress_ms = playback.progressMs;
+  if (playback.currentAmbientId !== undefined)
+    updates.current_ambient_id = playback.currentAmbientId;
+  if (playback.progressMs !== undefined)
+    updates.progress_ms = playback.progressMs;
 
   const { error } = await supabase
     .from("listen_sessions")

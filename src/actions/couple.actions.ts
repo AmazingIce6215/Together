@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 
 function generateInviteCode(): string {
@@ -14,12 +15,10 @@ function generateInviteCode(): string {
 }
 
 export async function createCouple() {
-  const supabase = await createClient();
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  const supabase = await createClient();
 
   let inviteCode: string;
   let attempts = 0;
@@ -37,7 +36,7 @@ export async function createCouple() {
 
   const { data: couple, error: coupleError } = await supabase
     .from("couples")
-    .insert({ invite_code: inviteCode, created_by: user.id })
+    .insert({ invite_code: inviteCode, created_by: userId })
     .select()
     .single();
 
@@ -45,7 +44,7 @@ export async function createCouple() {
 
   const { error: memberError } = await supabase
     .from("couple_members")
-    .insert({ couple_id: couple.id, user_id: user.id });
+    .insert({ couple_id: couple.id, user_id: userId });
 
   if (memberError) throw memberError;
 
@@ -57,12 +56,10 @@ export async function joinCouple(
   _prevState: { error?: string } | undefined,
   formData: FormData
 ): Promise<{ error?: string } | undefined> {
-  const supabase = await createClient();
+  const { userId } = await auth();
+  if (!userId) return { error: "Not authenticated" };
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  const supabase = await createClient();
 
   const inviteCode = formData.get("inviteCode") as string;
   if (!inviteCode) return { error: "Invite code is required" };
@@ -79,7 +76,7 @@ export async function joinCouple(
 
   const { error: memberError } = await supabase
     .from("couple_members")
-    .insert({ couple_id: couple.id, user_id: user.id });
+    .insert({ couple_id: couple.id, user_id: userId });
 
   if (memberError) {
     if (memberError.code === "23505") {
@@ -93,17 +90,15 @@ export async function joinCouple(
 }
 
 export async function getCurrentCouple() {
-  const supabase = await createClient();
+  const { userId } = await auth();
+  if (!userId) return null;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  const supabase = await createClient();
 
   const { data: member } = await supabase
     .from("couple_members")
     .select("couple_id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (!member) return null;

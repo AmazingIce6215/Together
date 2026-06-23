@@ -1,20 +1,21 @@
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@clerk/nextjs/server";
 import { Heart, Music, Timer } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { getCurrentCouple } from "@/actions/couple.actions";
 import { CreateRoomForm } from "@/components/quiz/create-room-form";
 import { JoinRoomForm } from "@/components/quiz/join-room-form";
 
 export default async function DashboardPage() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user!.id)
+    .eq("id", userId)
     .single();
 
   const couple = await getCurrentCouple();
@@ -59,7 +60,9 @@ export default async function DashboardPage() {
     );
   }
 
-  const partner = couple.members.find((m: { id: string }) => m.id !== user!.id);
+  const partner = couple.members.find(
+    (m: { id: string }) => m.id !== userId
+  );
 
   return (
     <div className="flex flex-col gap-8 p-6">
@@ -132,7 +135,9 @@ export default async function DashboardPage() {
           </div>
           <div className="flex flex-col">
             <span className="text-xs text-zinc-500">
-              {partner ? partner.display_name || "Your partner" : "Your partner"}
+              {partner
+                ? partner.display_name || "Your partner"
+                : "Your partner"}
             </span>
             <span className="flex items-center gap-1.5 text-sm font-medium">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
