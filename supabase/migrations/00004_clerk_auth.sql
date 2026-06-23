@@ -2,26 +2,19 @@
 -- Changes profiles.id from UUID to TEXT to accept Clerk user IDs
 -- Removes FK constraints to auth.users (which no longer exists)
 
--- Step 1: Drop all RLS policies BEFORE altering columns (policies reference columns)
-DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
-DROP POLICY IF EXISTS "Members can view their couple" ON couples;
-DROP POLICY IF EXISTS "Creator can update their couple" ON couples;
-DROP POLICY IF EXISTS "Members can view couple members" ON couple_members;
-DROP POLICY IF EXISTS "Users can join a couple" ON couple_members;
-DROP POLICY IF EXISTS "Anyone can view quiz categories" ON quiz_categories;
-DROP POLICY IF EXISTS "Anyone can view quiz questions" ON quiz_questions;
-DROP POLICY IF EXISTS "Members can view their quiz sessions" ON quiz_sessions;
-DROP POLICY IF EXISTS "Members can insert quiz sessions" ON quiz_sessions;
-DROP POLICY IF EXISTS "Members can update their quiz sessions" ON quiz_sessions;
-DROP POLICY IF EXISTS "Members can view responses in their sessions" ON quiz_responses;
-DROP POLICY IF EXISTS "Players can insert their own responses" ON quiz_responses;
-DROP POLICY IF EXISTS "Members can view their listen sessions" ON listen_sessions;
-DROP POLICY IF EXISTS "Members can manage their listen sessions" ON listen_sessions;
-DROP POLICY IF EXISTS "Members can view their focus sessions" ON focus_sessions;
-DROP POLICY IF EXISTS "Members can manage their focus sessions" ON focus_sessions;
-DROP POLICY IF EXISTS "Members can view focus participants" ON focus_participants;
-DROP POLICY IF EXISTS "Members can manage their own participation" ON focus_participants;
+-- Step 1: Drop all RLS policies dynamically (exact policy names vary)
+DO $$
+DECLARE
+    rec RECORD;
+BEGIN
+    FOR rec IN (
+        SELECT tablename, policyname
+        FROM pg_policies
+        WHERE schemaname = 'public'
+    ) LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON %I', rec.policyname, rec.tablename);
+    END LOOP;
+END $$;
 
 -- Step 2: Disable RLS
 ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
