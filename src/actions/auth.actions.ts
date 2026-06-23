@@ -4,33 +4,37 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export async function signIn(
-  _prev: { error?: string } | undefined,
-  formData: FormData
-): Promise<{ error?: string; success?: boolean } | undefined> {
+export async function signIn(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  if (!email || !password) return { error: "Email and password are required" };
+  if (!email || !password) {
+    redirect("/login?error=" + encodeURIComponent("Email and password are required"));
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error) return { error: error.message };
+  if (error) {
+    redirect("/login?error=" + encodeURIComponent(error.message));
+  }
 
-  return { success: true };
+  revalidatePath("/", "layout");
+  redirect("/");
 }
 
-export async function signUp(
-  _prev: { error?: string } | undefined,
-  formData: FormData
-): Promise<{ error?: string; success?: boolean } | undefined> {
+export async function signUp(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const displayName = formData.get("displayName") as string;
 
-  if (!email || !password) return { error: "Email and password are required" };
-  if (password.length < 6) return { error: "Password must be at least 6 characters" };
+  if (!email || !password) {
+    redirect("/signup?error=" + encodeURIComponent("Email and password are required"));
+  }
+
+  if (password.length < 6) {
+    redirect("/signup?error=" + encodeURIComponent("Password must be at least 6 characters"));
+  }
 
   const supabase = await createClient();
 
@@ -42,10 +46,12 @@ export async function signUp(
     },
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    redirect("/signup?error=" + encodeURIComponent(error.message));
+  }
 
   if (data.user?.identities?.length === 0) {
-    return { error: "An account with this email already exists" };
+    redirect("/signup?error=" + encodeURIComponent("An account with this email already exists"));
   }
 
   if (data.user) {
@@ -62,7 +68,7 @@ export async function signUp(
     redirect("/");
   }
 
-  return { success: true };
+  redirect("/signup?success=1");
 }
 
 export async function signOut() {
