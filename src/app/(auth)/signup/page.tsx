@@ -36,12 +36,21 @@ function SignupForm() {
       return;
     }
 
+    if (!data.session) {
+      setError("Account created! Check your email to confirm before signing in.");
+      setPending(false);
+      return;
+    }
+
     // Create profile
     if (data.user) {
-      await supabase.from("profiles").insert({
+      const { error: profileError } = await supabase.from("profiles").insert({
         id: data.user.id,
         display_name: displayName,
       });
+      if (profileError) {
+        console.warn("Profile insert error (non-fatal):", profileError);
+      }
     }
 
     window.location.href = "/";

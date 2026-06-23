@@ -21,7 +21,7 @@ function LoginForm() {
     const password = formData.get("password") as string;
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -29,9 +29,16 @@ function LoginForm() {
     if (error) {
       setError(error.message);
       setPending(false);
-    } else {
-      window.location.href = "/";
+      return;
     }
+
+    if (!data.session) {
+      setError("No session returned. Check if email confirmation is required.");
+      setPending(false);
+      return;
+    }
+
+    window.location.href = "/";
   }
 
   async function handleGoogle() {
