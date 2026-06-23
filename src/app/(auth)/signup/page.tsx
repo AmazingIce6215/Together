@@ -44,16 +44,16 @@ function SignupForm() {
 
     // Create profile
     if (data.user) {
-      const { error: profileError } = await supabase.from("profiles").insert({
+      await supabase.from("profiles").insert({
         id: data.user.id,
         display_name: displayName,
       });
-      if (profileError) {
-        console.warn("Profile insert error (non-fatal):", profileError);
-      }
     }
 
-    window.location.href = "/";
+    // Wait briefly for cookies to settle, then redirect
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 500);
   }
 
   async function handleGoogle() {

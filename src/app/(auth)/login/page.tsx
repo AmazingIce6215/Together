@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -21,7 +21,7 @@ function LoginForm() {
     const password = formData.get("password") as string;
 
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -32,13 +32,10 @@ function LoginForm() {
       return;
     }
 
-    if (!data.session) {
-      setError("No session returned. Check if email confirmation is required.");
-      setPending(false);
-      return;
-    }
-
-    window.location.href = "/";
+    // Wait briefly for cookies to settle, then redirect
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 500);
   }
 
   async function handleGoogle() {
