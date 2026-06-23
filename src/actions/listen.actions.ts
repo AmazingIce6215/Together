@@ -1,11 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, requireUserId, getCurrentUserId } from "@/lib/supabase/server";
 
 async function getCoupleId() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return null;
 
   const supabase = await createClient();
@@ -20,8 +19,7 @@ async function getCoupleId() {
 }
 
 export async function createListenSession() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Not authenticated");
+  const userId = await requireUserId();
 
   const supabase = await createClient();
 
@@ -45,7 +43,7 @@ export async function createListenSession() {
 }
 
 export async function getActiveSession() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return null;
 
   const supabase = await createClient();
@@ -71,8 +69,7 @@ export async function updatePlaybackState(playback: {
   currentAmbientId?: string | null;
   progressMs?: number;
 }) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Not authenticated");
+  const userId = await requireUserId();
 
   const supabase = await createClient();
 

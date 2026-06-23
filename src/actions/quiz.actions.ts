@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, requireUserId, getCurrentUserId } from "@/lib/supabase/server";
 
 export async function getCategories() {
   const supabase = await createClient();
@@ -29,8 +28,7 @@ export async function getQuestions(categoryId: string, mode: string) {
 }
 
 export async function createQuizSession(categoryId: string, mode: string) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Not authenticated");
+  const userId = await requireUserId();
 
   const supabase = await createClient();
 
@@ -65,8 +63,7 @@ export async function submitAnswer(
   questionId: string,
   answer: string
 ) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Not authenticated");
+  const userId = await requireUserId();
 
   const supabase = await createClient();
 
@@ -109,7 +106,7 @@ export async function getResponsesForQuestion(
 }
 
 async function getCoupleId() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return null;
 
   const supabase = await createClient();

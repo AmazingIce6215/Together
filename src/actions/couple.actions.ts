@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, requireUserId, getCurrentUserId } from "@/lib/supabase/server";
 
 function generateInviteCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -15,8 +14,7 @@ function generateInviteCode(): string {
 }
 
 export async function createCouple() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Not authenticated");
+  const userId = await requireUserId();
 
   const supabase = await createClient();
 
@@ -56,7 +54,7 @@ export async function joinCouple(
   _prevState: { error?: string } | undefined,
   formData: FormData
 ): Promise<{ error?: string } | undefined> {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return { error: "Not authenticated" };
 
   const supabase = await createClient();
@@ -90,7 +88,7 @@ export async function joinCouple(
 }
 
 export async function getCurrentCouple() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return null;
 
   const supabase = await createClient();

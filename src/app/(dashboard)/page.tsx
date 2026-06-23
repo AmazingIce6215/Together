@@ -1,13 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
 import { Heart, Music, Timer } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCouple } from "@/actions/couple.actions";
 import { CreateRoomForm } from "@/components/quiz/create-room-form";
 import { JoinRoomForm } from "@/components/quiz/join-room-form";
+import { getCurrentUserId } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return null;
 
   const supabase = await createClient();

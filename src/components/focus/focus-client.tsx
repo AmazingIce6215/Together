@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 import { useFocusStore } from "@/lib/store/focus-store";
 import { createFocusSession, updateFocusTask, updateFocusGoal } from "@/actions/focus.actions";
@@ -38,10 +37,19 @@ interface FocusClientProps {
 
 export function FocusClient({ initialSession }: FocusClientProps) {
   const store = useFocusStore();
-  const { user, isLoaded } = useUser();
+  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [partner, setPartner] = useState<Participant | null>(null);
   const [me, setMe] = useState<Participant | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ? { id: data.user.id } : null);
+      setIsLoaded(true);
+    });
+  }, []);
 
   useEffect(() => {
     if (initialSession) {

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Howl } from "howler";
-import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 import { useListenStore } from "@/lib/store/listen-store";
 import {
@@ -29,12 +28,21 @@ interface ListenClientProps {
 
 export function ListenClient({ initialSession }: ListenClientProps) {
   const store = useListenStore();
-  const { user, isLoaded } = useUser();
+  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [partner, setPartner] = useState<{ id: string; display_name: string | null } | null>(null);
   const [showTracks, setShowTracks] = useState(false);
 
   const howlRef = useRef<Howl | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ? { id: data.user.id } : null);
+      setIsLoaded(true);
+    });
+  }, []);
 
   useEffect(() => {
     if (initialSession) {

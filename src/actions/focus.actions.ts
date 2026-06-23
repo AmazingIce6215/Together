@@ -1,11 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, requireUserId, getCurrentUserId } from "@/lib/supabase/server";
 
 async function getCoupleId() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return null;
 
   const supabase = await createClient();
@@ -20,8 +19,7 @@ async function getCoupleId() {
 }
 
 export async function createFocusSession() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Not authenticated");
+  const userId = await requireUserId();
 
   const supabase = await createClient();
 
@@ -57,7 +55,7 @@ export async function createFocusSession() {
 }
 
 export async function getActiveSession() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return null;
 
   const supabase = await createClient();
@@ -85,8 +83,7 @@ export async function getActiveSession() {
 }
 
 export async function updateFocusTask(task: string) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Not authenticated");
+  const userId = await requireUserId();
 
   const supabase = await createClient();
 
@@ -109,8 +106,7 @@ export async function updateFocusTask(task: string) {
 }
 
 export async function updateFocusGoal(goal: string) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Not authenticated");
+  const userId = await requireUserId();
 
   const supabase = await createClient();
 

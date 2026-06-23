@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 import { useQuizStore } from "@/lib/store/quiz-store";
 import { getQuestions, getResponsesForQuestion, submitAnswer } from "@/actions/quiz.actions";
@@ -33,10 +32,18 @@ export function GameBoard({
   onSessionCreated,
 }: GameBoardProps) {
   const store = useQuizStore();
-  const { user } = useUser();
+  const [user, setUser] = useState<{ id: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+
+  // Fetch current user
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ? { id: data.user.id } : null);
+    });
+  }, []);
 
   // Load questions and set up real-time
   useEffect(() => {
