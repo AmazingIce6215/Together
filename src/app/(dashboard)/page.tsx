@@ -6,9 +6,14 @@ import { CreateRoomForm } from "@/components/quiz/create-room-form";
 import { JoinRoomForm } from "@/components/quiz/join-room-form";
 import { getCurrentUserId } from "@/lib/supabase/server";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const userId = await getCurrentUserId();
   if (!userId) return null;
+  const { error } = await searchParams;
 
   const supabase = await createClient();
 
@@ -23,6 +28,11 @@ export default async function DashboardPage() {
   if (!couple) {
     return (
       <div className="flex flex-col items-center justify-center gap-12 p-6 pt-20">
+        {error && (
+          <div className="w-full max-w-sm rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center">
+            {error}
+          </div>
+        )}
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900">
             <Heart className="h-6 w-6 text-zinc-400" />

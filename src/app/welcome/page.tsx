@@ -1,13 +1,4 @@
-import { redirect } from "next/navigation";
-import { getCurrentUserId } from "@/lib/supabase/server";
-
-export default async function Home() {
-  const userId = await getCurrentUserId();
-
-  if (userId) {
-    redirect("/focus");
-  }
-
+export default function WelcomePage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
       <main className="flex flex-col items-center gap-6 text-center">

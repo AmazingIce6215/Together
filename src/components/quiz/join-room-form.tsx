@@ -1,14 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { joinCouple } from "@/actions/couple.actions";
 
 export function JoinRoomForm() {
-  const [state, formAction, pending] = useActionState(joinCouple, undefined);
   const [code, setCode] = useState("");
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={joinCouple} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <label
           htmlFor="inviteCode"
@@ -26,16 +25,12 @@ export function JoinRoomForm() {
         />
       </div>
 
-      {state?.error && (
-        <p className="text-sm text-red-400">{state.error}</p>
-      )}
-
       <button
         type="submit"
-        disabled={pending || code.length < 8}
+        disabled={code.length < 8}
         className="rounded-xl bg-zinc-100 px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-200 disabled:opacity-50"
       >
-        {pending ? "Joining..." : "Join room"}
+        Join room
       </button>
     </form>
   );

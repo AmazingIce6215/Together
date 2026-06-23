@@ -50,17 +50,14 @@ export async function createCouple() {
   return { invite_code: inviteCode };
 }
 
-export async function joinCouple(
-  _prevState: { error?: string } | undefined,
-  formData: FormData
-): Promise<{ error?: string } | undefined> {
+export async function joinCouple(formData: FormData) {
   const userId = await getCurrentUserId();
-  if (!userId) return { error: "Not authenticated" };
+  if (!userId) redirect("/welcome");
 
   const supabase = await createClient();
 
   const inviteCode = formData.get("inviteCode") as string;
-  if (!inviteCode) return { error: "Invite code is required" };
+  if (!inviteCode) redirect("/?error=" + encodeURIComponent("Invite code is required"));
 
   const code = inviteCode.toUpperCase().trim();
 
@@ -70,7 +67,7 @@ export async function joinCouple(
     .eq("invite_code", code)
     .maybeSingle();
 
-  if (coupleError || !couple) return { error: "Invalid invite code" };
+  if (coupleError || !couple) redirect("/?error=" + encodeURIComponent("Invalid invite code"));
 
   const { error: memberError } = await supabase
     .from("couple_members")
@@ -78,9 +75,9 @@ export async function joinCouple(
 
   if (memberError) {
     if (memberError.code === "23505") {
-      return { error: "You're already in this room" };
+      redirect("/?error=" + encodeURIComponent("You're already in this room"));
     }
-    return { error: "Failed to join room" };
+    redirect("/?error=" + encodeURIComponent("Failed to join room"));
   }
 
   revalidatePath("/", "layout");
