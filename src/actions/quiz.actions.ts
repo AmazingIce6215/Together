@@ -158,7 +158,41 @@ export async function getResponsesForQuestion(
   return data || [];
 }
 
-async function getCoupleId() {
+export async function getSessionQuestions(sessionId: string) {
+  const supabase = await createClient();
+  const session = await getSession(sessionId);
+  if (!session || !session.questions || session.questions.length === 0) return [];
+
+  const { data } = await supabase
+    .from("quiz_questions")
+    .select("*")
+    .in("id", session.questions);
+
+  // Preserve the order from the session's questions array
+  const questionMap = new Map((data || []).map((q: { id: string }) => [q.id, q]));
+  return session.questions
+    .map((id: string) => questionMap.get(id))
+    .filter(Boolean);
+}
+
+export async function getActiveSession() {
+  const coupleId = await getCoupleId();
+  if (!coupleId) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("quiz_sessions")
+    .select("id, category_id, mode, status, created_by")
+    .eq("couple_id", coupleId)
+    .eq("status", "in_progress")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  return data;
+}
+
+export async function getCoupleId() {
   const userId = await getCurrentUserId();
   if (!userId) return null;
 

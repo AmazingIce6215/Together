@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useQuizStore } from "@/lib/store/quiz-store";
-import { getQuestions, getResponsesForQuestion, submitAnswer } from "@/actions/quiz.actions";
+import { getQuestions, getSessionQuestions, getResponsesForQuestion, submitAnswer } from "@/actions/quiz.actions";
 import { QuestionCard } from "@/components/quiz/question-card";
 import { AnswerReveal } from "@/components/quiz/answer-reveal";
 import { ScoreDisplay } from "@/components/quiz/score-display";
@@ -49,7 +49,15 @@ export function GameBoard({
   useEffect(() => {
     async function init() {
       try {
-        const questions = await getQuestions(categoryId, mode);
+        let questions;
+
+        if (sessionId) {
+          // Joining an existing session — load the same questions
+          questions = await getSessionQuestions(sessionId);
+        } else {
+          questions = await getQuestions(categoryId, mode);
+        }
+
         if (questions.length === 0) {
           setError("No questions available for this category and mode.");
           setLoading(false);
@@ -80,7 +88,7 @@ export function GameBoard({
     }
 
     init();
-  }, [categoryId, mode]);
+  }, [categoryId, mode, sessionId]);
 
   // Subscribe to real-time responses
   useEffect(() => {

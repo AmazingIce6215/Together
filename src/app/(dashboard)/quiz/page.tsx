@@ -1,8 +1,11 @@
-import { getCategories } from "@/actions/quiz.actions";
+import { getCategories, getCoupleId } from "@/actions/quiz.actions";
 import { QuizClient } from "@/components/quiz/quiz-client";
 
 export default async function QuizPage() {
-  const categories = await getCategories();
+  const [categories, coupleId] = await Promise.all([
+    getCategories(),
+    getCoupleId(),
+  ]);
 
-  return <QuizClient categories={categories} />;
+  return <QuizClient categories={categories} coupleId={coupleId} />;
 }
