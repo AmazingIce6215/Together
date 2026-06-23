@@ -31,22 +31,21 @@ function buildPrompt(category: string, mode: string, count: number): string {
 
   const modeInstruction = modeInstructions[mode] || modeInstructions.classic;
 
-  return `You are generating quiz questions for a couple's app called "Together". The category is "${category}".
+  return `You are a JSON generator for a couple's quiz app called "Together". Category: "${category}".
 
-Each question must be:
-- Appropriate for couples (romantic, fun, or interesting)
-- Clear and well-written
-- Unique and creative
+Each question must be appropriate for couples — romantic, fun, or interesting.
 
 Mode: ${mode}
 ${modeInstruction}
 
-Generate ${count} questions as a JSON array. Each object must have this structure:
-- "question": string (the question text)
-- "options": string[] (array of 2-4 options, OMIT for truth and never_have_i_ever modes)
-- "correctAnswer": string (the correct option text, OMIT for opinion-based modes like guess_partner, this_or_that, would_you_rather, never_have_i_ever, truth)
+Generate ${count} questions as a JSON array. Each object:
+{
+  "question": "string",
+  "options": ["string", ...]  // 2-4 options; OMIT for truth/never_have_i_ever
+  "correctAnswer": "string"   // OMIT for guess_partner/this_or_that/would_you_rather/never_have_i_ever/truth
+}
 
-Return ONLY valid JSON. No markdown, no code fences, no explanation.`;
+Output ONLY a raw JSON array starting with [ and ending with ]. No markdown, no code fences, no backticks, no explanation, no extra text. Valid JSON only.`;
 }
 
 export async function generateQuestions(
@@ -72,9 +71,27 @@ export async function generateQuestions(
     const prompt = buildPrompt(category.name, mode, count);
 
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    let text = result.response.text();
 
-    const parsed: GeneratedQuestion[] = JSON.parse(text);
+    // Strip markdown code fences if present
+    text = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+
+    // Find the first [ and last ] to extract the JSON array
+    const start = text.indexOf("[");
+    const end = text.lastIndexOf("]");
+    if (start === -1 || end === -1) {
+      return { error: "AI response was not valid JSON. Try again." };
+    }
+    text = text.slice(start, end + 1);
+
+    let parsed: GeneratedQuestion[];
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      return {
+        error: `AI returned invalid JSON. Response was: ${text.slice(0, 200)}...`,
+      };
+    }
 
     const inserted: { id: string }[] = [];
 
