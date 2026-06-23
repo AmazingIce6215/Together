@@ -1,12 +1,74 @@
 "use client";
 
-import { useActionState } from "react";
-import { signUp } from "@/actions/auth.actions";
+import { useState, FormEvent } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export function SignupForm() {
-  const [state, formAction, pending] = useActionState(signUp, undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  if (state?.success) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+
+    const form = new FormData(e.currentTarget);
+    const email = form.get("email") as string;
+    const password = form.get("password") as string;
+    const displayName = form.get("displayName") as string;
+
+    if (!email || !password) {
+      setError("Email and password are required");
+      setPending(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setPending(false);
+      return;
+    }
+
+    const supabase = createClient();
+    const { data, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: displayName || email.split("@")[0] },
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setPending(false);
+      return;
+    }
+
+    if (data.user?.identities?.length === 0) {
+      setError("An account with this email already exists");
+      setPending(false);
+      return;
+    }
+
+    if (data.user) {
+      const name = displayName || email.split("@")[0];
+      await supabase.from("profiles").upsert(
+        { id: data.user.id, display_name: name },
+        { onConflict: "id" }
+      );
+    }
+
+    if (data.session) {
+      window.location.href = "/";
+      return;
+    }
+
+    setSuccess(true);
+    setPending(false);
+  }
+
+  if (success) {
     return (
       <div className="flex flex-col items-center gap-3 text-center">
         <h2 className="text-lg font-semibold">Check your email</h2>
@@ -24,10 +86,10 @@ export function SignupForm() {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
-      {state?.error && (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {error && (
         <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
-          {state.error}
+          {error}
         </p>
       )}
 

@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function signIn(
   _prev: { error?: string } | undefined,
   formData: FormData
-): Promise<{ error?: string } | undefined> {
+): Promise<{ error?: string; success?: boolean } | undefined> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
@@ -18,8 +18,7 @@ export async function signIn(
 
   if (error) return { error: error.message };
 
-  revalidatePath("/", "layout");
-  redirect("/");
+  return { success: true };
 }
 
 export async function signUp(

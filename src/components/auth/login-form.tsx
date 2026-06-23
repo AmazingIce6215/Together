@@ -1,16 +1,41 @@
 "use client";
 
-import { useActionState } from "react";
-import { signIn } from "@/actions/auth.actions";
+import { useState, FormEvent } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
-  const [state, formAction, pending] = useActionState(signIn, undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+
+    const form = new FormData(e.currentTarget);
+    const email = form.get("email") as string;
+    const password = form.get("password") as string;
+
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setPending(false);
+      return;
+    }
+
+    window.location.href = "/";
+  }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
-      {state?.error && (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {error && (
         <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
-          {state.error}
+          {error}
         </p>
       )}
 
