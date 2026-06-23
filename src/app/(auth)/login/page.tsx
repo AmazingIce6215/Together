@@ -1,14 +1,42 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTransition } from "react";
 import { signIn, signInWithGoogle } from "@/actions/auth.actions";
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const error = searchParams.get("error");
-  const [pending, startTransition] = useTransition();
+  const urlError = searchParams.get("error");
+  const [error, setError] = useState<string | null>(urlError);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const result = await signIn(formData);
+    if (result?.error) {
+      setError(result.error);
+      setPending(false);
+    } else {
+      window.location.href = "/";
+    }
+  }
+
+  async function handleGoogle() {
+    setPending(true);
+    const result = await signInWithGoogle();
+    if (result?.url) {
+      window.location.href = result.url;
+    } else {
+      setError(result?.error || "Something went wrong");
+      setPending(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -17,7 +45,7 @@ function LoginForm() {
         <p className="text-sm text-zinc-400">Sign in to your account</p>
       </div>
 
-      <form action={signIn} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="email" className="text-sm font-medium text-zinc-300">
             Email
@@ -70,7 +98,7 @@ function LoginForm() {
       </div>
 
       <button
-        onClick={() => startTransition(() => signInWithGoogle())}
+        onClick={handleGoogle}
         disabled={pending}
         className="rounded-xl border border-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-900 disabled:opacity-50"
       >

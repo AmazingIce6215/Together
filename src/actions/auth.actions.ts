@@ -1,10 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export async function signUp(formData: FormData) {
+export async function signUp(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -19,9 +18,7 @@ export async function signUp(formData: FormData) {
     },
   });
 
-  if (error) {
-    redirect(`/signup?error=${encodeURIComponent(error.message)}`);
-  }
+  if (error) return { error: error.message };
 
   if (data.user) {
     await supabase.from("profiles").insert({
@@ -31,10 +28,10 @@ export async function signUp(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  return {};
 }
 
-export async function signIn(formData: FormData) {
+export async function signIn(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -45,15 +42,13 @@ export async function signIn(formData: FormData) {
     password,
   });
 
-  if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
-  }
+  if (error) return { error: error.message };
 
   revalidatePath("/", "layout");
-  redirect("/");
+  return {};
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(): Promise<{ url?: string; error?: string }> {
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -63,18 +58,13 @@ export async function signInWithGoogle() {
     },
   });
 
-  if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
-  }
-
-  if (data.url) {
-    redirect(data.url);
-  }
+  if (error) return { error: error.message };
+  if (data.url) return { url: data.url };
+  return { error: "Failed to initiate sign in" };
 }
 
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect("/");
 }
