@@ -12,18 +12,71 @@ export async function getCategories() {
   return data || [];
 }
 
+async function getUsedQuestionIds(coupleId: string): Promise<string[]> {
+  const supabase = await createClient();
+
+  const { data: sessions } = await supabase
+    .from("quiz_sessions")
+    .select("questions")
+    .eq("couple_id", coupleId)
+    .not("questions", "is", null);
+
+  if (!sessions) return [];
+
+  const ids = new Set<string>();
+  for (const s of sessions) {
+    if (Array.isArray(s.questions)) {
+      for (const id of s.questions) {
+        if (id) ids.add(id);
+      }
+    }
+  }
+  return Array.from(ids);
+}
+
+export async function countAvailableQuestions(
+  categoryId: string,
+  mode: string
+): Promise<number> {
+  const supabase = await createClient();
+  const couple = await getCoupleId();
+  if (!couple) return 0;
+
+  const usedIds = await getUsedQuestionIds(couple);
+
+  let query = supabase
+    .from("quiz_questions")
+    .select("id", { count: "exact", head: true })
+    .eq("category_id", categoryId)
+    .eq("mode", mode);
+
+  if (usedIds.length > 0) {
+    query = query.not("id", "in", `(${usedIds.join(",")})`);
+  }
+
+  const { count } = await query;
+  return count ?? 0;
+}
+
 export async function getQuestions(categoryId: string, mode: string) {
   const supabase = await createClient();
 
   const couple = await getCoupleId();
   if (!couple) return [];
 
-  const { data } = await supabase
+  const usedIds = await getUsedQuestionIds(couple);
+
+  let query = supabase
     .from("quiz_questions")
     .select("*")
     .eq("category_id", categoryId)
     .eq("mode", mode);
 
+  if (usedIds.length > 0) {
+    query = query.not("id", "in", `(${usedIds.join(",")})`);
+  }
+
+  const { data } = await query;
   return data || [];
 }
 

@@ -1,0 +1,106 @@
+"use server";
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createClient, requireUserId, getCurrentUserId } from "@/lib/supabase/server";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+interface GeneratedQuestion {
+  question: string;
+  options?: string[];
+  correctAnswer?: string;
+}
+
+function buildPrompt(category: string, mode: string, count: number): string {
+  const modeInstructions: Record<string, string> = {
+    classic:
+      "Multiple choice trivia question with 4 options and one correct answer.",
+    guess_partner:
+      'A question that asks about personal preferences or opinions. Has 2-4 options. NO correct answer — the "correct" answer is whatever the person chooses. Format options as choices.',
+    this_or_that:
+      'A "This or That" question with exactly 2 compelling options. NO correct answer.',
+    speed_round:
+      "Multiple choice trivia question with 4 options and one correct answer. Make it relatively easy so it can be answered quickly.",
+    never_have_i_ever:
+      'A "Never Have I Ever" statement. Do NOT include options. The statement should start with "Never have I ever".',
+    would_you_rather:
+      'A "Would You Rather" question with exactly 2 equally challenging/unappealing options. NO correct answer.',
+    truth:
+      "An open-ended personal/romantic question. Do NOT include options. Should encourage honest answers.",
+  };
+
+  const modeInstruction = modeInstructions[mode] || modeInstructions.classic;
+
+  return `You are generating quiz questions for a couple's app called "Together". The category is "${category}".
+
+Each question must be:
+- Appropriate for couples (romantic, fun, or interesting)
+- Clear and well-written
+- Unique and creative
+
+Mode: ${mode}
+${modeInstruction}
+
+Generate ${count} questions as a JSON array. Each object must have this structure:
+- "question": string (the question text)
+- "options": string[] (array of 2-4 options, OMIT for truth and never_have_i_ever modes)
+- "correctAnswer": string (the correct option text, OMIT for opinion-based modes like guess_partner, this_or_that, would_you_rather, never_have_i_ever, truth)
+
+Return ONLY valid JSON. No markdown, no code fences, no explanation.`;
+}
+
+export async function generateQuestions(
+  categoryId: string,
+  mode: string,
+  count: number = 15
+): Promise<{ questions: { id: string }[] } | { error: string }> {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return { error: "Not authenticated" };
+
+    const supabase = await createClient();
+
+    const { data: category } = await supabase
+      .from("quiz_categories")
+      .select("name")
+      .eq("id", categoryId)
+      .single();
+
+    if (!category) return { error: "Category not found" };
+
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = buildPrompt(category.name, mode, count);
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
+    const parsed: GeneratedQuestion[] = JSON.parse(text);
+
+    const inserted: { id: string }[] = [];
+
+    for (const q of parsed) {
+      const { data } = await supabase
+        .from("quiz_questions")
+        .insert({
+          category_id: categoryId,
+          mode,
+          question: q.question,
+          options: q.options || null,
+          correct_answer: q.correctAnswer || null,
+          created_by: userId,
+        })
+        .select("id")
+        .single();
+
+      if (data) inserted.push(data);
+    }
+
+    return { questions: inserted };
+  } catch (e) {
+    console.error("Quiz generation failed:", e);
+    return {
+      error:
+        e instanceof Error ? e.message : "Failed to generate questions",
+    };
+  }
+}
