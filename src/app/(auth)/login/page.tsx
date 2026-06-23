@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { signIn, signInWithGoogle } from "@/actions/auth.actions";
+import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -17,10 +17,17 @@ function LoginForm() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    const result = await signIn(formData);
-    if (result?.error) {
-      setError(result.error);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
       setPending(false);
     } else {
       window.location.href = "/";
@@ -29,11 +36,16 @@ function LoginForm() {
 
   async function handleGoogle() {
     setPending(true);
-    const result = await signInWithGoogle();
-    if (result?.url) {
-      window.location.href = result.url;
-    } else {
-      setError(result?.error || "Something went wrong");
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/callback`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
       setPending(false);
     }
   }

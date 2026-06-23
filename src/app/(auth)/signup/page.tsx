@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { signUp, signInWithGoogle } from "@/actions/auth.actions";
+import { createClient } from "@/lib/supabase/client";
 
 function SignupForm() {
   const searchParams = useSearchParams();
@@ -17,23 +17,48 @@ function SignupForm() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const displayName = formData.get("displayName") as string;
 
-    const result = await signUp(formData);
-    if (result?.error) {
-      setError(result.error);
+    const supabase = createClient();
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: displayName },
+      },
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
       setPending(false);
-    } else {
-      window.location.href = "/";
+      return;
     }
+
+    // Create profile
+    if (data.user) {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        display_name: displayName,
+      });
+    }
+
+    window.location.href = "/";
   }
 
   async function handleGoogle() {
     setPending(true);
-    const result = await signInWithGoogle();
-    if (result?.url) {
-      window.location.href = result.url;
-    } else {
-      setError(result?.error || "Something went wrong");
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/callback`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
       setPending(false);
     }
   }
