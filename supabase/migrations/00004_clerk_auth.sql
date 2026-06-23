@@ -39,6 +39,7 @@ ALTER TABLE focus_participants DISABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
 ALTER TABLE couples DROP CONSTRAINT IF EXISTS couples_created_by_fkey;
 ALTER TABLE couple_members DROP CONSTRAINT IF EXISTS couple_members_user_id_fkey;
+ALTER TABLE quiz_categories DROP CONSTRAINT IF EXISTS quiz_categories_created_by_fkey;
 ALTER TABLE quiz_questions DROP CONSTRAINT IF EXISTS quiz_questions_created_by_fkey;
 ALTER TABLE quiz_sessions DROP CONSTRAINT IF EXISTS quiz_sessions_created_by_fkey;
 ALTER TABLE quiz_responses DROP CONSTRAINT IF EXISTS quiz_responses_user_id_fkey;
