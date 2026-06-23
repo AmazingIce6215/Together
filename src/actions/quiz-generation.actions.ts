@@ -68,7 +68,7 @@ export async function generateQuestions(
 
     if (!category) return { error: "Category not found" };
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt = buildPrompt(category.name, mode, count);
 
     const result = await model.generateContent(prompt);
