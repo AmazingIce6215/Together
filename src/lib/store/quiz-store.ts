@@ -1,89 +1,100 @@
 import { create } from "zustand";
+import type { Question } from "@/data/questions";
 
-interface Question {
-  id: string;
-  category_id: string;
-  mode: string;
-  question: string;
-  options: string[] | null;
-  correct_answer: string | null;
-}
-
-interface PlayerAnswer {
-  user_id: string;
+export interface PlayerAnswer {
   answer: string;
+  rating?: number;
 }
+
+export type QuizPhase = "category" | "game" | "summary";
+export type QuizMode = "solo" | "versus";
 
 interface QuizState {
-  sessionId: string | null;
+  phase: QuizPhase;
+  mode: QuizMode | null;
+  category: string | null;
   questions: Question[];
   currentIndex: number;
-  answersByQuestion: Record<string, PlayerAnswer[]>;
-  scores: Record<string, number>;
-  isRevealed: boolean;
-  isComplete: boolean;
+  playerAAnswers: Record<string, PlayerAnswer>;
+  playerBAnswers: Record<string, PlayerAnswer>;
+  isPlayerATurn: boolean;
 
-  setSessionId: (id: string) => void;
+  setPhase: (phase: QuizPhase) => void;
+  setCategory: (category: string) => void;
+  setMode: (mode: QuizMode) => void;
   setQuestions: (questions: Question[]) => void;
-  setCurrentIndex: (index: number) => void;
-  addAnswer: (questionId: string, answer: PlayerAnswer) => void;
-  revealAnswers: () => void;
+  answerCurrent: (text: string, rating?: number) => void;
   nextQuestion: () => void;
-  addScore: (userId: string, points: number) => void;
-  setIsComplete: (complete: boolean) => void;
+  endPlayerATurn: () => void;
   reset: () => void;
 }
 
-export const useQuizStore = create<QuizState>((set) => ({
-  sessionId: null,
+export const useQuizStore = create<QuizState>((set, get) => ({
+  phase: "category",
+  mode: null,
+  category: null,
   questions: [],
   currentIndex: 0,
-  answersByQuestion: {},
-  scores: {},
-  isRevealed: false,
-  isComplete: false,
+  playerAAnswers: {},
+  playerBAnswers: {},
+  isPlayerATurn: true,
 
-  setSessionId: (id) => set({ sessionId: id }),
+  setPhase: (phase) => set({ phase }),
+  setCategory: (category) => set({ category }),
+  setMode: (mode) => set({ mode, phase: "game" }),
   setQuestions: (questions) => set({ questions }),
-  setCurrentIndex: (index) => set({ currentIndex: index }),
-  addAnswer: (questionId, answer) =>
-    set((state) => {
-      const existing = state.answersByQuestion[questionId] || [];
-      const idx = existing.findIndex((a) => a.user_id === answer.user_id);
-      if (idx >= 0) {
-        const updated = [...existing];
-        updated[idx] = answer;
-        return { answersByQuestion: { ...state.answersByQuestion, [questionId]: updated } };
+
+  answerCurrent: (text, rating) => {
+    const state = get();
+    const question = state.questions[state.currentIndex];
+    if (!question) return;
+
+    const answer: PlayerAnswer = { answer: text, rating };
+
+    if (state.mode === "versus" && !state.isPlayerATurn) {
+      set({
+        playerBAnswers: { ...state.playerBAnswers, [question.id]: answer },
+      });
+    } else {
+      set({
+        playerAAnswers: { ...state.playerAAnswers, [question.id]: answer },
+      });
+    }
+  },
+
+  nextQuestion: () => {
+    const state = get();
+    const nextIdx = state.currentIndex + 1;
+
+    if (nextIdx >= state.questions.length) {
+      if (state.mode === "versus") {
+        // If it was Player A's turn, switch to Player B
+        if (state.isPlayerATurn) {
+          set({ isPlayerATurn: false, currentIndex: 0 });
+        } else {
+          set({ phase: "summary", currentIndex: nextIdx });
+        }
+      } else {
+        set({ phase: "summary", currentIndex: nextIdx });
       }
-      return {
-        answersByQuestion: {
-          ...state.answersByQuestion,
-          [questionId]: [...existing, answer],
-        },
-      };
-    }),
-  revealAnswers: () => set({ isRevealed: true }),
-  nextQuestion: () =>
-    set((state) => ({
-      currentIndex: state.currentIndex + 1,
-      isRevealed: false,
-    })),
-  addScore: (userId, points) =>
-    set((state) => ({
-      scores: {
-        ...state.scores,
-        [userId]: (state.scores[userId] || 0) + points,
-      },
-    })),
-  setIsComplete: (complete) => set({ isComplete: complete }),
+    } else {
+      set({ currentIndex: nextIdx });
+    }
+  },
+
+  endPlayerATurn: () => {
+    set({ isPlayerATurn: false, currentIndex: 0 });
+  },
+
   reset: () =>
     set({
-      sessionId: null,
+      phase: "category",
+      mode: null,
+      category: null,
       questions: [],
       currentIndex: 0,
-      answersByQuestion: {},
-      scores: {},
-      isRevealed: false,
-      isComplete: false,
+      playerAAnswers: {},
+      playerBAnswers: {},
+      isPlayerATurn: true,
     }),
 }));

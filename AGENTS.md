@@ -16,12 +16,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ### Modules Built
 
 #### Quiz Together (`/quiz`)
-- 7 game modes (classic, guess_partner, this_or_that, speed_round, never_have_i_ever, would_you_rather, truth)
-- 13 categories seeded
-- Real-time sync via postgres_changes on quiz_responses
-- Zustand store for client state
-- Questions generated via AI on demand (15 per API call, Groq Llama 3.3 70B)
-- Used questions excluded from future sessions per couple
+- 4 categories: Romantic, Funny, Spicy, Trivia — each with unique tone and scoring
+- 3 question types: `multiple_choice` (4 options, one correct), `would_you_rather` (2 options, partner comparison), `open_ended` (free text, no auto-scoring)
+- Hardcoded question bank in `src/data/questions.ts` (~8 per category, manually curated)
+- AI generation only for Trivia via Groq (`src/actions/quiz-generation.actions.ts` → `generateTrivia`)
+- 2 game modes: Solo (answer about your partner) and Versus (both answer independently, then compare)
+- Scoring: Trivia = 1pt per correct answer; Romantic/Funny/Spicy = 0–3 star rating after reveal
+- No DB dependency for questions or categories — all data is local
+- No real-time sync — local-only for now
 
 #### Focus Together (`/focus`)
 - Shared Pomodoro timer synced via postgres_changes
@@ -55,16 +57,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - RLS disabled globally after Clerk migration (all user ID columns are TEXT, no FK to auth.users)
 - Real-time publication for quiz_sessions, quiz_responses, listen_sessions, focus_sessions, focus_participants
 
-### Quiz Generation
-- AI-powered question generation via Groq Llama 3.3 70B (free tier)
-- `quiz-generation.actions.ts`: prompts Groq per mode, parses JSON, inserts into DB
-- 15 questions generated per API call
-- Questions excluded from future sessions once used by a couple
-- `countAvailableQuestions` checks unused question pool per couple
-- If < 5 available, mode card shows "Generate with AI" — tap to generate + auto-start game
+### Quiz (Restructured)
+- 4 categories: Romantic, Funny, Spicy, Trivia — each with unique tone and scoring
+- 3 question types: `multiple_choice` (4 options, one correct), `would_you_rather` (2 options, partner comparison), `open_ended` (free text, no auto-scoring)
+- Hardcoded question bank in `src/data/questions.ts` (~8 per category, manually curated)
+- AI generation only for Trivia via Groq (`src/actions/quiz-generation.actions.ts` → `generateTrivia`)
+- 2 game modes: Solo (answer about your partner) and Versus (both answer independently, then compare)
+- Scoring: Trivia = 1pt per correct answer; Romantic/Funny/Spicy = 0–3 star rating after reveal
+- No DB dependency for questions or categories — all data is local
+- No real-time sync — local-only for now
 - Set `GROQ_API_KEY` in `.env.local` and Vercel env vars (get from https://console.groq.com/keys)
 
 ### Next Steps
 - Add actual audio files to `public/audio/ambient/` (royalty-free from Pixabay, Freesound, etc.)
 - Polish empty states, error handling, accessibility
-- Add GEMINI_API_KEY to Vercel environment variables
+- Expand question bank with more questions per category

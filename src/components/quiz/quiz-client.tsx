@@ -1,280 +1,268 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { CategoryPicker } from "@/components/quiz/category-picker";
-import { ModeSelector } from "@/components/quiz/mode-selector";
-import { GameBoard } from "@/components/quiz/game-board";
+import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gamepad2, X } from "lucide-react";
+import { useQuizStore } from "@/lib/store/quiz-store";
+import { CATEGORIES } from "@/data/categories";
+import { getQuestionsForCategory, type Question } from "@/data/questions";
+import { QuestionCard } from "@/components/quiz/question-card";
+import { ScoreDisplay } from "@/components/quiz/score-display";
+import { generateTrivia } from "@/actions/quiz-generation.actions";
+import {
+  Heart,
+  Sparkles,
+  Flame,
+  Brain,
+  User,
+  Users,
+  ArrowLeft,
+} from "lucide-react";
 
-interface Category {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  color: string | null;
-}
+const categoryIcons: Record<string, typeof Heart> = {
+  romantic: Heart,
+  funny: Sparkles,
+  spicy: Flame,
+  trivia: Brain,
+};
 
-interface QuizClientProps {
-  categories: Category[];
-  coupleId: string | null;
-}
+export function QuizClient() {
+  const store = useQuizStore();
+  const questions = store.questions;
+  const currentQuestion = questions[store.currentIndex] ?? null;
+  const currentCategory = CATEGORIES.find((c) => c.slug === store.category);
 
-interface PartnerSession {
-  id: string;
-  category_id: string;
-  mode: string;
-}
-
-type Screen = "categories" | "modes" | "game";
-
-export function QuizClient({ categories, coupleId }: QuizClientProps) {
-  const [screen, setScreen] = useState<Screen>("categories");
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedMode, setSelectedMode] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [partnerSession, setPartnerSession] = useState<PartnerSession | null>(null);
-  const [dismissed, setDismissed] = useState(false);
-  const [categoryMap, setCategoryMap] = useState<Map<string, Category>>(new Map());
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  // Build category lookup map
-  useEffect(() => {
-    const map = new Map<string, Category>();
-    for (const c of categories) map.set(c.id, c);
-    setCategoryMap(map);
-  }, [categories]);
-
-  // Fetch current user
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setCurrentUserId(data.user.id);
-    });
-  }, []);
-
-  // Check for existing active session on mount + subscribe
-  useEffect(() => {
-    if (!coupleId) return;
-
-    const supabase = createClient();
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-
-    // Check for existing active session (recent, not own)
-    if (currentUserId) {
-      supabase
-        .from("quiz_sessions")
-        .select("id, category_id, mode, created_by")
-        .eq("couple_id", coupleId)
-        .eq("status", "in_progress")
-        .gte("created_at", thirtyMinAgo)
-        .neq("created_by", currentUserId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setPartnerSession({
-              id: data.id,
-              category_id: data.category_id,
-              mode: data.mode,
-            });
-          }
-        });
-    }
-
-    // Subscribe to new sessions (skip own)
-    const channel = supabase
-      .channel("quiz-partner-sessions")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "quiz_sessions",
-          filter: `couple_id=eq.${coupleId}`,
-        },
-        (payload) => {
-          const s = payload.new as {
-            id: string;
-            category_id: string;
-            mode: string;
-            status: string;
-            created_by: string;
-            created_at: string;
-          };
-
-          const createdAt = new Date(s.created_at).getTime();
-          const isRecent = Date.now() - createdAt < 30 * 60 * 1000;
-          const isNotOwn = s.created_by !== currentUserId;
-
-          if (s.status === "in_progress" && isRecent && isNotOwn) {
-            setPartnerSession({
-              id: s.id,
-              category_id: s.category_id,
-              mode: s.mode,
-            });
-            setDismissed(false);
-          }
+  const handleCategorySelect = useCallback(
+    async (slug: string) => {
+      store.setCategory(slug);
+      // For trivia, generate questions via AI
+      if (slug === "trivia") {
+        const result = await generateTrivia(8);
+        if ("questions" in result) {
+          store.setQuestions(result.questions as Question[]);
+        } else {
+          // fallback to seeded questions
+          store.setQuestions(getQuestionsForCategory(slug));
         }
-      )
-      .subscribe();
+      } else {
+        store.setQuestions(getQuestionsForCategory(slug));
+      }
+    },
+    [store]
+  );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [coupleId, currentUserId]);
+  const handleAnswer = useCallback(
+    (answer: string) => {
+      store.answerCurrent(answer);
+    },
+    [store]
+  );
 
-  const handleJoinSession = useCallback(() => {
-    if (!partnerSession) return;
+  const handleNext = useCallback(() => {
+    store.nextQuestion();
+  }, [store]);
 
-    const cat = categoryMap.get(partnerSession.category_id);
-    if (cat) {
-      setSelectedCategory(cat);
-      setSelectedMode(partnerSession.mode);
-      setSessionId(partnerSession.id);
-      setScreen("game");
-      setPartnerSession(null);
-    }
-  }, [partnerSession, categoryMap]);
+  const handleModeSelect = useCallback(
+    (mode: "solo" | "versus") => {
+      store.setMode(mode);
+    },
+    [store]
+  );
 
-  function handleCategorySelect(category: Category) {
-    setSelectedCategory(category);
-    setScreen("modes");
+  const handleRestart = useCallback(() => {
+    store.reset();
+  }, [store]);
+
+  // ── Category picker screen ──────────────────────────
+  if (store.phase === "category") {
+    return (
+      <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold tracking-tight">Quiz</h1>
+          <p className="text-sm text-zinc-400">Choose a category</p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {CATEGORIES.map((cat, i) => {
+            const Icon = categoryIcons[cat.slug] || Heart;
+            return (
+              <motion.button
+                key={cat.slug}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => handleCategorySelect(cat.slug)}
+                className="group flex flex-col items-start gap-3 rounded-2xl border border-zinc-800/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900/50"
+              >
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ backgroundColor: `${cat.color}15` }}
+                >
+                  <Icon className="h-5 w-5" style={{ color: cat.color }} />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">{cat.name}</span>
+                  <span className="text-xs text-zinc-500">{cat.description}</span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
-  function handleModeSelect(mode: string) {
-    setSelectedMode(mode);
-    setScreen("game");
-    setPartnerSession(null);
+  // ── Mode picker (after category selected) ───────────
+  if (!store.mode) {
+    return (
+      <div className="flex flex-col gap-6 p-6">
+        <button
+          onClick={() => store.setPhase("category")}
+          className="flex items-center gap-1.5 self-start text-sm text-zinc-500 transition-colors hover:text-zinc-300"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold tracking-tight">
+            {currentCategory?.name ?? "Quiz"}
+          </h1>
+          <p className="text-sm text-zinc-400">How do you want to play?</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0 }}
+            onClick={() => handleModeSelect("solo")}
+            className="flex flex-col items-start gap-3 rounded-2xl border border-zinc-800/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900/50"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800/50">
+              <User className="h-5 w-5 text-zinc-300" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Solo</span>
+              <span className="text-xs text-zinc-500">
+                Answer questions and see how you score
+              </span>
+            </div>
+          </motion.button>
+          <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            onClick={() => handleModeSelect("versus")}
+            className="flex flex-col items-start gap-3 rounded-2xl border border-zinc-800/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900/50"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800/50">
+              <Users className="h-5 w-5 text-zinc-300" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Versus</span>
+              <span className="text-xs text-zinc-500">
+                Both partners answer, then compare
+              </span>
+            </div>
+          </motion.button>
+        </div>
+      </div>
+    );
   }
 
-  function handleSessionCreated(id: string) {
-    setSessionId(id);
+  // ── Summary screen ──────────────────────────────────
+  if (store.phase === "summary") {
+    return (
+      <div className="p-6">
+        <ScoreDisplay
+          category={store.category!}
+          questions={store.questions}
+          playerAAnswers={store.playerAAnswers}
+          playerBAnswers={store.playerBAnswers}
+          mode={store.mode}
+          onRestart={handleRestart}
+        />
+      </div>
+    );
   }
 
-  function handleBack() {
-    if (screen === "modes") {
-      setSelectedCategory(null);
-      setScreen("categories");
-    } else if (screen === "game") {
-      setSelectedMode(null);
-      setSessionId(null);
-      setScreen("modes");
-    }
-  }
-
-  const catName = partnerSession
-    ? categoryMap.get(partnerSession.category_id)?.name ?? "a quiz"
-    : "";
+  // ── Game screen ─────────────────────────────────────
+  const isPlayerATurn = store.isPlayerATurn;
+  const isLastQuestion = store.currentIndex >= store.questions.length - 1;
+  const totalQuestions = store.questions.length;
+  const turnLabel =
+    store.mode === "versus"
+      ? isPlayerATurn
+        ? "Your turn"
+        : "Partner's turn"
+      : null;
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Partner session banner — only on category screen */}
-      <AnimatePresence>
-        {partnerSession && !dismissed && screen === "categories" && (
+      {/* Progress */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <div className="h-1 overflow-hidden rounded-full bg-zinc-800">
+            <div
+              className="h-full rounded-full bg-zinc-100 transition-all duration-500"
+              style={{
+                width: `${((store.currentIndex + 1) / totalQuestions) * 100}%`,
+              }}
+            />
+          </div>
+        </div>
+        <span className="text-xs text-zinc-500">
+          {store.currentIndex + 1} / {totalQuestions}
+        </span>
+      </div>
+
+      {/* Turn indicator (versus) */}
+      {turnLabel && (
+        <p className="text-center text-xs font-medium text-zinc-500">
+          {turnLabel}
+        </p>
+      )}
+
+      {/* Question card */}
+      {currentQuestion && (
+        <AnimatePresence mode="wait">
           <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            className="relative overflow-hidden rounded-2xl border border-emerald-800/30 bg-emerald-950/20 p-4"
+            key={currentQuestion.id + (isPlayerATurn ? "-a" : "-b")}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.2 }}
           >
-            <button
-              onClick={() => setDismissed(true)}
-              className="absolute right-3 top-3 text-zinc-500 transition-colors hover:text-zinc-300"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                <Gamepad2 className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div className="flex flex-1 flex-col gap-0.5">
-                <p className="text-sm font-medium text-emerald-300">
-                  Partner started a game!
-                </p>
-                <p className="text-xs text-zinc-400">
-                  {catName} &middot; {formatModeName(partnerSession.mode)}
-                </p>
-              </div>
-              <button
-                onClick={handleJoinSession}
-                className="rounded-xl bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20"
-              >
-                Join
-              </button>
-            </div>
+            <QuestionCard
+              question={currentQuestion}
+              onAnswer={handleAnswer}
+            />
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {screen === "categories" && (
-        <>
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold tracking-tight">Quiz</h1>
-            <p className="text-sm text-zinc-400">Choose a category</p>
-          </div>
-          <CategoryPicker
-            categories={categories}
-            onSelect={handleCategorySelect}
-          />
-        </>
+        </AnimatePresence>
       )}
 
-      {screen === "modes" && selectedCategory && (
-        <>
-          <div className="flex flex-col gap-1">
-            <button
-              onClick={handleBack}
-              className="self-start text-sm text-zinc-500 transition-colors hover:text-zinc-300"
-            >
-              &larr; Back to categories
-            </button>
-            <h1 className="text-xl font-semibold tracking-tight">
-              {selectedCategory.name}
-            </h1>
-            <p className="text-sm text-zinc-400">
-              {selectedCategory.description || "Choose a game mode"}
-            </p>
-          </div>
-          <ModeSelector
-            categoryId={selectedCategory.id}
-            onSelect={handleModeSelect}
-            onSessionCreated={handleSessionCreated}
-          />
-        </>
-      )}
+      {/* Next button — show after answering */}
+      {currentQuestion && (() => {
+        const answered = store.isPlayerATurn
+          ? !!store.playerAAnswers[currentQuestion.id]
+          : !!store.playerBAnswers[currentQuestion.id];
+        if (!answered) return null;
 
-      {screen === "game" && selectedCategory && selectedMode && (
-        <>
-          <div className="flex flex-col gap-1">
-            <button
-              onClick={handleBack}
-              className="self-start text-sm text-zinc-500 transition-colors hover:text-zinc-300"
-            >
-              &larr; Back to modes
-            </button>
-            <h1 className="text-xl font-semibold tracking-tight">
-              {selectedCategory.name} &middot; {formatModeName(selectedMode)}
-            </h1>
-          </div>
-          <GameBoard
-            categoryId={selectedCategory.id}
-            mode={selectedMode}
-            sessionId={sessionId}
-            onSessionCreated={handleSessionCreated}
-          />
-        </>
-      )}
+        const buttonLabel = isLastQuestion
+          ? store.mode === "versus" && store.isPlayerATurn
+            ? "Switch to partner"
+            : "See results"
+          : "Next question";
+
+        return (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={handleNext}
+            className="mx-auto rounded-xl bg-zinc-100 px-8 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-200"
+          >
+            {buttonLabel}
+          </motion.button>
+        );
+      })()}
     </div>
   );
-}
-
-function formatModeName(mode: string): string {
-  return mode
-    .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
 }
