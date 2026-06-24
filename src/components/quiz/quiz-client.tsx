@@ -38,6 +38,7 @@ export function QuizClient({ categories, coupleId }: QuizClientProps) {
   const [partnerSession, setPartnerSession] = useState<PartnerSession | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [categoryMap, setCategoryMap] = useState<Map<string, Category>>(new Map());
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Build category lookup map
   useEffect(() => {
@@ -46,32 +47,45 @@ export function QuizClient({ categories, coupleId }: QuizClientProps) {
     setCategoryMap(map);
   }, [categories]);
 
+  // Fetch current user
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setCurrentUserId(data.user.id);
+    });
+  }, []);
+
   // Check for existing active session on mount + subscribe
   useEffect(() => {
     if (!coupleId) return;
 
     const supabase = createClient();
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
-    // Check for existing active session
-    supabase
-      .from("quiz_sessions")
-      .select("id, category_id, mode, created_by")
-      .eq("couple_id", coupleId)
-      .eq("status", "in_progress")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setPartnerSession({
-            id: data.id,
-            category_id: data.category_id,
-            mode: data.mode,
-          });
-        }
-      });
+    // Check for existing active session (recent, not own)
+    if (currentUserId) {
+      supabase
+        .from("quiz_sessions")
+        .select("id, category_id, mode, created_by")
+        .eq("couple_id", coupleId)
+        .eq("status", "in_progress")
+        .gte("created_at", thirtyMinAgo)
+        .neq("created_by", currentUserId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setPartnerSession({
+              id: data.id,
+              category_id: data.category_id,
+              mode: data.mode,
+            });
+          }
+        });
+    }
 
-    // Subscribe to new sessions
+    // Subscribe to new sessions (skip own)
     const channel = supabase
       .channel("quiz-partner-sessions")
       .on(
@@ -88,8 +102,15 @@ export function QuizClient({ categories, coupleId }: QuizClientProps) {
             category_id: string;
             mode: string;
             status: string;
+            created_by: string;
+            created_at: string;
           };
-          if (s.status === "in_progress") {
+
+          const createdAt = new Date(s.created_at).getTime();
+          const isRecent = Date.now() - createdAt < 30 * 60 * 1000;
+          const isNotOwn = s.created_by !== currentUserId;
+
+          if (s.status === "in_progress" && isRecent && isNotOwn) {
             setPartnerSession({
               id: s.id,
               category_id: s.category_id,
@@ -104,18 +125,18 @@ export function QuizClient({ categories, coupleId }: QuizClientProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [coupleId]);
+  }, [coupleId, currentUserId]);
 
   const handleJoinSession = useCallback(() => {
     if (!partnerSession) return;
 
-    // Look up category from the map or find by id
     const cat = categoryMap.get(partnerSession.category_id);
     if (cat) {
       setSelectedCategory(cat);
       setSelectedMode(partnerSession.mode);
       setSessionId(partnerSession.id);
       setScreen("game");
+      setPartnerSession(null);
     }
   }, [partnerSession, categoryMap]);
 
@@ -127,6 +148,7 @@ export function QuizClient({ categories, coupleId }: QuizClientProps) {
   function handleModeSelect(mode: string) {
     setSelectedMode(mode);
     setScreen("game");
+    setPartnerSession(null);
   }
 
   function handleSessionCreated(id: string) {
@@ -150,7 +172,7 @@ export function QuizClient({ categories, coupleId }: QuizClientProps) {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Partner session banner */}
+      {/* Partner session banner — only on category screen */}
       <AnimatePresence>
         {partnerSession && !dismissed && screen === "categories" && (
           <motion.div

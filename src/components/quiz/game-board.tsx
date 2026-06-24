@@ -9,6 +9,8 @@ import {
   getSessionQuestions,
   getResponsesForQuestion,
   submitAnswer,
+  completeQuizSession,
+  abandonQuizSession,
 } from "@/actions/quiz.actions";
 import { QuestionCard } from "@/components/quiz/question-card";
 import { AnswerReveal } from "@/components/quiz/answer-reveal";
@@ -188,6 +190,34 @@ export function GameBoard({
     }
   }, [myAnswer, partnerAnswer, store.isRevealed]);
 
+  // Session lifecycle cleanup — best-effort abandon on tab close / unmount
+  const abandonRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const handleBeforeUnload = () => {
+      navigator.sendBeacon(
+        "/api/abandon-session",
+        JSON.stringify({ sessionId })
+      );
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // On React unmount (navigating away within the app)
+    abandonRef.current = () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      fetch("/api/abandon-session", {
+        method: "POST",
+        body: JSON.stringify({ sessionId }),
+        keepalive: true,
+      }).catch(() => {});
+    };
+
+    return () => {
+      abandonRef.current?.();
+    };
+  }, [sessionId]);
+
   const handleAnswer = useCallback(
     async (answer: string) => {
       if (!sessionId || !currentQuestion || !userIdRef.current) return;
@@ -243,6 +273,9 @@ export function GameBoard({
         scores={store.scores}
         questions={store.questions}
         onRestart={() => {
+          if (store.sessionId) {
+            completeQuizSession(store.sessionId);
+          }
           store.reset();
           window.location.reload();
         }}

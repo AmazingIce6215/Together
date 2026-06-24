@@ -80,6 +80,32 @@ export async function getQuestions(categoryId: string, mode: string) {
   return data || [];
 }
 
+export async function completeQuizSession(sessionId: string) {
+  const supabase = await createClient();
+  await supabase
+    .from("quiz_sessions")
+    .update({ status: "completed" })
+    .eq("id", sessionId);
+  revalidatePath("/quiz");
+}
+
+export async function abandonQuizSession(sessionId: string) {
+  const supabase = await createClient();
+  await supabase
+    .from("quiz_sessions")
+    .update({ status: "abandoned" })
+    .eq("id", sessionId);
+}
+
+async function endPreviousSessions(coupleId: string) {
+  const supabase = await createClient();
+  await supabase
+    .from("quiz_sessions")
+    .update({ status: "abandoned" })
+    .eq("couple_id", coupleId)
+    .eq("status", "in_progress");
+}
+
 export async function createQuizSession(categoryId: string, mode: string) {
   const userId = await requireUserId();
 
@@ -87,6 +113,9 @@ export async function createQuizSession(categoryId: string, mode: string) {
 
   const couple = await getCoupleId();
   if (!couple) throw new Error("No couple found");
+
+  // End any stale sessions before creating a new one
+  await endPreviousSessions(couple);
 
   const questions = await getQuestions(categoryId, mode);
   if (questions.length === 0) throw new Error("No questions available");
@@ -180,14 +209,16 @@ export async function getActiveSession() {
   if (!coupleId) return null;
 
   const supabase = await createClient();
+  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
   const { data } = await supabase
     .from("quiz_sessions")
     .select("id, category_id, mode, status, created_by")
     .eq("couple_id", coupleId)
     .eq("status", "in_progress")
+    .gte("created_at", thirtyMinAgo)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   return data;
 }
