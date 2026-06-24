@@ -68,7 +68,7 @@ export async function generateQuestions(
     if (!category) return { error: "Category not found" };
 
     const prompt = buildPrompt(category.name, mode, count);
-    const model = "llama3-70b-8192";
+    const model = "llama-3.3-70b-versatile";
 
     const completion = await groq.chat.completions.create({
       model,

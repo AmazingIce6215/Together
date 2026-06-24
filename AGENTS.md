@@ -20,7 +20,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 13 categories seeded
 - Real-time sync via postgres_changes on quiz_responses
 - Zustand store for client state
-- Questions generated via AI on demand (15 per API call, Groq Llama 3 70B)
+- Questions generated via AI on demand (15 per API call, Groq Llama 3.3 70B)
 - Used questions excluded from future sessions per couple
 
 #### Focus Together (`/focus`)
@@ -56,7 +56,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Real-time publication for quiz_sessions, quiz_responses, listen_sessions, focus_sessions, focus_participants
 
 ### Quiz Generation
-- AI-powered question generation via Groq Llama 3 70B (free tier)
+- AI-powered question generation via Groq Llama 3.3 70B (free tier)
 - `quiz-generation.actions.ts`: prompts Groq per mode, parses JSON, inserts into DB
 - 15 questions generated per API call
 - Questions excluded from future sessions once used by a couple
