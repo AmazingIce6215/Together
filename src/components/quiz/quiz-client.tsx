@@ -34,13 +34,14 @@ export function QuizClient() {
   const handleCategorySelect = useCallback(
     async (slug: string) => {
       store.setCategory(slug);
+      // Advance to mode selection (phase check passes, !mode check catches it)
+      store.setPhase("game");
       // For trivia, generate questions via AI
       if (slug === "trivia") {
         const result = await generateTrivia(8);
         if ("questions" in result) {
           store.setQuestions(result.questions as Question[]);
         } else {
-          // fallback to seeded questions
           store.setQuestions(getQuestionsForCategory(slug));
         }
       } else {
