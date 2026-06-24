@@ -1,18 +1,19 @@
 import { create } from "zustand";
-import type { Question } from "@/data/questions";
+import type { Question, QuestionType } from "@/data/questions";
 
 export interface PlayerAnswer {
   answer: string;
   rating?: number;
 }
 
-export type QuizPhase = "category" | "game" | "summary";
+export type QuizPhase = "category" | "mode" | "type" | "game" | "summary";
 export type QuizMode = "solo" | "versus";
 
 interface QuizState {
   phase: QuizPhase;
   mode: QuizMode | null;
   category: string | null;
+  questionType: QuestionType | null;
   questions: Question[];
   currentIndex: number;
   playerAAnswers: Record<string, PlayerAnswer>;
@@ -22,6 +23,7 @@ interface QuizState {
   setPhase: (phase: QuizPhase) => void;
   setCategory: (category: string) => void;
   setMode: (mode: QuizMode) => void;
+  setQuestionType: (type: QuestionType) => void;
   setQuestions: (questions: Question[]) => void;
   answerCurrent: (text: string, rating?: number) => void;
   nextQuestion: () => void;
@@ -33,6 +35,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   phase: "category",
   mode: null,
   category: null,
+  questionType: null,
   questions: [],
   currentIndex: 0,
   playerAAnswers: {},
@@ -41,7 +44,8 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   setPhase: (phase) => set({ phase }),
   setCategory: (category) => set({ category }),
-  setMode: (mode) => set({ mode, phase: "game" }),
+  setMode: (mode) => set({ mode }),
+  setQuestionType: (questionType) => set({ questionType, phase: "game" }),
   setQuestions: (questions) => set({ questions }),
 
   answerCurrent: (text, rating) => {
@@ -68,7 +72,6 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
     if (nextIdx >= state.questions.length) {
       if (state.mode === "versus") {
-        // If it was Player A's turn, switch to Player B
         if (state.isPlayerATurn) {
           set({ isPlayerATurn: false, currentIndex: 0 });
         } else {
@@ -91,6 +94,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       phase: "category",
       mode: null,
       category: null,
+      questionType: null,
       questions: [],
       currentIndex: 0,
       playerAAnswers: {},

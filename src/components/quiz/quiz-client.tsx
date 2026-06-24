@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuizStore } from "@/lib/store/quiz-store";
 import { CATEGORIES } from "@/data/categories";
-import { getQuestionsForCategory, type Question } from "@/data/questions";
+import { getQuestionsForCategory, type Question, type QuestionType } from "@/data/questions";
 import { QuestionCard } from "@/components/quiz/question-card";
 import { ScoreDisplay } from "@/components/quiz/score-display";
 import { generateTrivia } from "@/actions/quiz-generation.actions";
@@ -34,7 +34,7 @@ export function QuizClient() {
   const handleCategorySelect = useCallback(
     (slug: string) => {
       store.setCategory(slug);
-      store.setPhase("game");
+      store.setPhase("mode");
     },
     [store]
   );
@@ -46,15 +46,48 @@ export function QuizClient() {
 
       store.setMode(mode);
 
+      if (mode === "solo") {
+        // Solo: load multiple_choice questions and start game
+        if (slug === "trivia") {
+          const result = await generateTrivia(8);
+          if ("questions" in result) {
+            store.setQuestions(result.questions as Question[]);
+          } else {
+            store.setQuestions(getQuestionsForCategory(slug, "solo"));
+          }
+        } else {
+          store.setQuestions(getQuestionsForCategory(slug, "solo"));
+        }
+        store.setPhase("game");
+      } else {
+        // Versus: show type picker first
+        store.setPhase("type");
+      }
+    },
+    [store]
+  );
+
+  const handleTypeSelect = useCallback(
+    async (type: QuestionType) => {
+      const slug = store.category;
+      if (!slug) return;
+
+      store.setQuestionType(type);
+
       if (slug === "trivia") {
         const result = await generateTrivia(8);
         if ("questions" in result) {
-          store.setQuestions(result.questions as Question[]);
+          const typed = (result.questions as Question[]).filter(
+            (q) => q.type === type
+          );
+          store.setQuestions(typed.length > 0 ? typed : result.questions as Question[]);
         } else {
-          store.setQuestions(getQuestionsForCategory(slug, mode));
+          store.setQuestions(getQuestionsForCategory(slug, "versus").filter((q) => q.type === type));
         }
       } else {
-        store.setQuestions(getQuestionsForCategory(slug, mode));
+        store.setQuestions(
+          getQuestionsForCategory(slug, "versus").filter((q) => q.type === type)
+        );
       }
     },
     [store]
@@ -114,8 +147,8 @@ export function QuizClient() {
     );
   }
 
-  // ── Mode picker (after category selected) ───────────
-  if (!store.mode) {
+  // ── Mode picker screen ──────────────────────────────
+  if (store.phase === "mode") {
     return (
       <div className="flex flex-col gap-6 p-6">
         <button
@@ -171,6 +204,62 @@ export function QuizClient() {
     );
   }
 
+  // ── Type picker screen (Versus only) ────────────────
+  if (store.phase === "type") {
+    const types: { slug: QuestionType; label: string; description: string }[] = [
+      {
+        slug: "multiple_choice",
+        label: "Multiple Choice",
+        description: "Pick the right answer from options",
+      },
+      {
+        slug: "would_you_rather",
+        label: "Would You Rather",
+        description: "Two options — both partners pick one",
+      },
+      {
+        slug: "open_ended",
+        label: "Open Ended",
+        description: "Free text answers for both partners",
+      },
+    ];
+
+    return (
+      <div className="flex flex-col gap-6 p-6">
+        <button
+          onClick={() => store.setPhase("mode")}
+          className="flex items-center gap-1.5 self-start text-sm text-zinc-500 transition-colors hover:text-zinc-300"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold tracking-tight">
+            {currentCategory?.name ?? "Quiz"} &middot; Versus
+          </h1>
+          <p className="text-sm text-zinc-400">Choose a question type</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {types.map((t, i) => (
+            <motion.button
+              key={t.slug}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              onClick={() => handleTypeSelect(t.slug)}
+              className="flex flex-col items-start gap-3 rounded-2xl border border-zinc-800/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900/50"
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">{t.label}</span>
+                <span className="text-xs text-zinc-500">{t.description}</span>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   // ── Summary screen ──────────────────────────────────
   if (store.phase === "summary") {
     return (
@@ -180,7 +269,7 @@ export function QuizClient() {
           questions={store.questions}
           playerAAnswers={store.playerAAnswers}
           playerBAnswers={store.playerBAnswers}
-          mode={store.mode}
+          mode={store.mode!}
           onRestart={handleRestart}
         />
       </div>
