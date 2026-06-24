@@ -1,9 +1,9 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { createClient, requireUserId, getCurrentUserId } from "@/lib/supabase/server";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 interface GeneratedQuestion {
   question: string;
@@ -67,11 +67,16 @@ export async function generateQuestions(
 
     if (!category) return { error: "Category not found" };
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt = buildPrompt(category.name, mode, count);
+    const model = "llama3-70b-8192";
 
-    const result = await model.generateContent(prompt);
-    let text = result.response.text();
+    const completion = await groq.chat.completions.create({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+    });
+
+    let text = completion.choices[0]?.message?.content || "";
 
     // Strip markdown code fences if present
     text = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
