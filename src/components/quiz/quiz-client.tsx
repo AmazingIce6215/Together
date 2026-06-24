@@ -32,20 +32,29 @@ export function QuizClient() {
   const currentCategory = CATEGORIES.find((c) => c.slug === store.category);
 
   const handleCategorySelect = useCallback(
-    async (slug: string) => {
+    (slug: string) => {
       store.setCategory(slug);
-      // Advance to mode selection (phase check passes, !mode check catches it)
       store.setPhase("game");
-      // For trivia, generate questions via AI
+    },
+    [store]
+  );
+
+  const handleModeSelect = useCallback(
+    async (mode: "solo" | "versus") => {
+      const slug = store.category;
+      if (!slug) return;
+
+      store.setMode(mode);
+
       if (slug === "trivia") {
         const result = await generateTrivia(8);
         if ("questions" in result) {
           store.setQuestions(result.questions as Question[]);
         } else {
-          store.setQuestions(getQuestionsForCategory(slug));
+          store.setQuestions(getQuestionsForCategory(slug, mode));
         }
       } else {
-        store.setQuestions(getQuestionsForCategory(slug));
+        store.setQuestions(getQuestionsForCategory(slug, mode));
       }
     },
     [store]
@@ -61,13 +70,6 @@ export function QuizClient() {
   const handleNext = useCallback(() => {
     store.nextQuestion();
   }, [store]);
-
-  const handleModeSelect = useCallback(
-    (mode: "solo" | "versus") => {
-      store.setMode(mode);
-    },
-    [store]
-  );
 
   const handleRestart = useCallback(() => {
     store.reset();

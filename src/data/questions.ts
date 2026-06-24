@@ -77,6 +77,61 @@ export const QUESTIONS: Question[] = [
     question: "How do you prefer to say 'I love you' without words?",
     options: ["A long hug", "Making their favorite meal", "Leaving a sweet note", "Doing a chore for them", "A surprise gift"],
   },
+  {
+    id: "r009",
+    category: "romantic",
+    type: "multiple_choice",
+    question: "What's your partner's favorite way to spend a Sunday?",
+    options: ["Sleeping in", "Going on an adventure", "Cooking together", "Watching movies in bed", "Seeing friends"],
+  },
+  {
+    id: "r010",
+    category: "romantic",
+    type: "multiple_choice",
+    question: "What song reminds your partner most of you?",
+    options: ["A slow love song", "Our song", "Something upbeat", "A throwback hit", "They don't have one"],
+  },
+  {
+    id: "r011",
+    category: "romantic",
+    type: "would_you_rather",
+    question: "Would you rather...",
+    options: ["Write each other love letters", "Record voice notes for each other"],
+  },
+  {
+    id: "r012",
+    category: "romantic",
+    type: "open_ended",
+    question: "What's a promise you want to make to your partner today?",
+  },
+  {
+    id: "r013",
+    category: "romantic",
+    type: "multiple_choice",
+    question: "What kind of vacation does your partner dream about?",
+    options: ["Beach getaway", "Mountain cabin", "European city tour", "Road trip across the country", "Tropical island resort"],
+  },
+  {
+    id: "r014",
+    category: "romantic",
+    type: "multiple_choice",
+    question: "How does your partner most often show they love you?",
+    options: ["Through acts of service", "By spending time with you", "With words of encouragement", "By being physically affectionate", "With thoughtful surprises"],
+  },
+  {
+    id: "r015",
+    category: "romantic",
+    type: "would_you_rather",
+    question: "Would you rather...",
+    options: ["Relive your favorite memory together", "Create a brand new memory"],
+  },
+  {
+    id: "r016",
+    category: "romantic",
+    type: "multiple_choice",
+    question: "What's the most romantic gesture your partner has ever done?",
+    options: ["A surprise date", "A heartfelt gift", "A thoughtful note", "A public declaration", "A trip they planned"],
+  },
 
   // ── Funny ────────────────────────────────────────
   {
@@ -143,6 +198,61 @@ export const QUESTIONS: Question[] = [
     category: "funny",
     type: "open_ended",
     question: "What's the worst date idea your partner has ever suggested?",
+  },
+  {
+    id: "f009",
+    category: "funny",
+    type: "multiple_choice",
+    question: "If your partner were a reality TV star, what show would they be on?",
+    options: ["A cooking competition", "A dating show (ironically)", "A survival challenge", "A home renovation show", "A talk show"],
+  },
+  {
+    id: "f010",
+    category: "funny",
+    type: "multiple_choice",
+    question: "What's the most ridiculous thing your partner has googled?",
+    options: ["How to fold a fitted sheet", "Can fish drown", "Why is the sky blue (again)", "How to talk to squirrels", "Random celebrity heights"],
+  },
+  {
+    id: "f011",
+    category: "funny",
+    type: "would_you_rather",
+    question: "Would you rather...",
+    options: ["Have your partner's browser history made public", "Have your own browser history made public"],
+  },
+  {
+    id: "f012",
+    category: "funny",
+    type: "open_ended",
+    question: "Describe your partner's 'guilty pleasure' in one sentence.",
+  },
+  {
+    id: "f013",
+    category: "funny",
+    type: "multiple_choice",
+    question: "What's your partner's go-to karaoke song?",
+    options: ["A power ballad", "A 90s throwback", "Something no one knows", "A rap song (badly)", "They refuse to sing"],
+  },
+  {
+    id: "f014",
+    category: "funny",
+    type: "multiple_choice",
+    question: "How does your partner react when they get startled?",
+    options: ["A dramatic scream", "A jump and laugh", "They throw something", "They pretend it didn't happen", "They get annoyed"],
+  },
+  {
+    id: "f015",
+    category: "funny",
+    type: "would_you_rather",
+    question: "Would you rather...",
+    options: ["Have your partner set your morning alarm for a month", "Have them pick your outfit every day for a month"],
+  },
+  {
+    id: "f016",
+    category: "funny",
+    type: "multiple_choice",
+    question: "What would your partner's 'dad joke' specialty be?",
+    options: ["Puns about food", "Terrible wordplay", "Knock-knock jokes", "One-liners that flop", "They'd deny telling jokes at all"],
   },
 
   // ── Spicy ────────────────────────────────────────
@@ -218,6 +328,61 @@ export const QUESTIONS: Question[] = [
     question: "Would you rather...",
     options: ["Be surprised in the morning", "Plan something special for the evening"],
   },
+  {
+    id: "s009",
+    category: "spicy",
+    type: "multiple_choice",
+    question: "What does your partner find most attractive about you?",
+    options: ["Your smile", "Your sense of humor", "Your confidence", "Your eyes", "Your kindness"],
+  },
+  {
+    id: "s010",
+    category: "spicy",
+    type: "multiple_choice",
+    question: "What's your partner's favorite way to unwind after a long day?",
+    options: ["A hot shower", "Cuddling in silence", "Talking about their day", "Listening to music", "A glass of wine together"],
+  },
+  {
+    id: "s011",
+    category: "spicy",
+    type: "would_you_rather",
+    question: "Would you rather...",
+    options: ["Send something flirty during the day", "Save it all for when you're together"],
+  },
+  {
+    id: "s012",
+    category: "spicy",
+    type: "open_ended",
+    question: "What's something you've always wanted to tell your partner but haven't?",
+  },
+  {
+    id: "s013",
+    category: "spicy",
+    type: "multiple_choice",
+    question: "Where does your partner love being kissed most?",
+    options: ["On the lips", "On the neck", "On the forehead", "On the cheek", "On the hand"],
+  },
+  {
+    id: "s014",
+    category: "spicy",
+    type: "multiple_choice",
+    question: "What's the most attractive outfit your partner loves seeing you in?",
+    options: ["Something casual and cozy", "Something elegant and dressed up", "Something fitted and bold", "Pajamas / loungewear", "A specific color they love on you"],
+  },
+  {
+    id: "s015",
+    category: "spicy",
+    type: "would_you_rather",
+    question: "Would you rather...",
+    options: ["Be told exactly what your partner wants", "Have them show you without words"],
+  },
+  {
+    id: "s016",
+    category: "spicy",
+    type: "multiple_choice",
+    question: "What time of day does your partner feel most romantic?",
+    options: ["Early morning", "Afternoon", "Evening / sunset", "Late night", "Spontaneously — any time"],
+  },
 
   // ── Trivia (seeded examples; AI generates more on demand) ──
   {
@@ -286,6 +451,27 @@ export const QUESTIONS: Question[] = [
   },
 ];
 
-export function getQuestionsForCategory(category: string): Question[] {
-  return QUESTIONS.filter((q) => q.category === category);
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+export function getQuestionsForCategory(
+  category: string,
+  mode?: "solo" | "versus"
+): Question[] {
+  const catQuestions = QUESTIONS.filter((q) => q.category === category);
+
+  if (mode === "solo") {
+    // Solo mode: only multiple_choice
+    const mcOnly = catQuestions.filter((q) => q.type === "multiple_choice");
+    return shuffle(mcOnly);
+  }
+
+  // Versus mode: include all types
+  return shuffle(catQuestions);
 }
