@@ -25,7 +25,7 @@ export function PartnerCard({ participant }: PartnerCardProps) {
   const statusInfo = statusConfig[participant.status as keyof typeof statusConfig] || statusConfig.idle;
 
   return (
-    <div className="gradient-border">
+    <div className="gradient-border shadow-elevated">
       <div className="gradient-border-surface rounded-[29px] p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-sm font-medium text-zinc-300">

@@ -1,4 +1,4 @@
-import { Heart, Music, Timer } from "lucide-react";
+import { Heart, Music, Timer, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCouple } from "@/actions/couple.actions";
@@ -13,8 +13,6 @@ const features = [
     description: "Play games, answer questions, discover each other",
     href: "/quiz",
     icon: GamepadIcon,
-    accent: "text-primary",
-    bgAccent: "bg-primary",
   },
   {
     number: "02",
@@ -22,8 +20,6 @@ const features = [
     description: "Share music and ambient sounds in real time",
     href: "/listen",
     icon: MusicIcon,
-    accent: "text-secondary",
-    bgAccent: "bg-secondary",
   },
   {
     number: "03",
@@ -31,8 +27,6 @@ const features = [
     description: "Study together with a shared Pomodoro timer",
     href: "/focus",
     icon: TimerIcon,
-    accent: "text-tertiary",
-    bgAccent: "bg-tertiary",
   },
 ];
 
@@ -76,7 +70,7 @@ export default async function DashboardPage({
         </div>
 
         <div className="flex w-full max-w-sm flex-col gap-8">
-          <div className="gradient-border">
+          <div className="gradient-border shadow-elevated">
             <div className="gradient-border-surface rounded-[29px] p-6">
               <CreateRoomForm />
             </div>
@@ -91,7 +85,7 @@ export default async function DashboardPage({
             </div>
           </div>
 
-          <div className="gradient-border">
+          <div className="gradient-border shadow-elevated">
             <div className="gradient-border-surface rounded-[29px] p-6">
               <h2 className="mb-4 text-center text-sm font-medium text-zinc-300">
                 Join existing room
@@ -109,26 +103,26 @@ export default async function DashboardPage({
   );
 
   return (
-    <div className="flex flex-col gap-10 p-6 pt-10">
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-8 p-6">
+      {/* ── Section header ───────────────────────────── */}
+      <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium tracking-widest uppercase text-primary">
           Dashboard
         </span>
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Hey, {profile?.display_name || "there"}
-            </h1>
-            <p className="text-sm text-zinc-500">
-              What would you like to do together today?
-            </p>
-          </div>
-          <code className="hidden rounded-[30px] border border-border bg-zinc-900/50 px-3 py-1.5 text-xs font-mono text-zinc-500 sm:block">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            Hey, {profile?.display_name || "there"}
+          </h1>
+          <code className="hidden shrink-0 rounded-[30px] border border-border bg-zinc-900/50 px-3 py-1.5 text-xs font-mono text-zinc-500 sm:block">
             {couple.invite_code}
           </code>
         </div>
+        <p className="text-sm text-zinc-500">
+          What would you like to do together today?
+        </p>
       </div>
 
+      {/* ── Three ways to make an impact ──────────────── */}
       <div className="grid gap-3 sm:grid-cols-3">
         {features.map((feature) => {
           const Icon = feature.icon;
@@ -136,24 +130,28 @@ export default async function DashboardPage({
             <Link
               key={feature.href}
               href={feature.href}
-              className="gradient-border group transition-all duration-150 hover:brightness-110"
+              className="gradient-border shadow-elevated group transition-all duration-150 hover:brightness-110"
             >
-              <div className="gradient-border-surface flex flex-col gap-6 rounded-[29px] p-6">
-                <div className="flex items-center justify-between">
+              <div className="gradient-border-surface flex flex-col rounded-[29px] p-6">
+                <div className="flex items-start justify-between">
                   <span className="text-[64px] font-semibold leading-[0.8] tracking-[-0.04em] text-zinc-800">
                     {feature.number}
                   </span>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${feature.bgAccent} transition-transform duration-150 group-hover:scale-110`}>
-                    <Icon className="h-5 w-5 text-black" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary transition-transform duration-150 group-hover:scale-110">
+                    <Icon className="h-5 w-5 text-text-primary" />
                   </div>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <h2 className={`text-lg font-semibold tracking-tight ${feature.accent}`}>
+                <div className="mt-2 flex flex-col gap-2">
+                  <h2 className="text-lg font-semibold tracking-tight text-foreground">
                     {feature.title}
                   </h2>
                   <p className="text-sm leading-relaxed text-zinc-500">
                     {feature.description}
                   </p>
+                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary transition-all duration-150 group-hover:gap-1.5">
+                    Open
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
                 </div>
               </div>
             </Link>
@@ -161,7 +159,8 @@ export default async function DashboardPage({
         })}
       </div>
 
-      <div className="gradient-border">
+      {/* ── Partner status ────────────────────────────── */}
+      <div className="gradient-border shadow-elevated">
         <div className="gradient-border-surface rounded-[29px] p-5">
           <div className="flex items-center gap-4">
             <div className="flex -space-x-2">

@@ -18,7 +18,7 @@ export function PartnerStatus({
   const isPaused = status === "paused";
 
   return (
-    <div className="gradient-border">
+    <div className="gradient-border shadow-elevated">
       <div className="gradient-border-surface rounded-[29px] p-5">
         <div className="flex items-center gap-3">
           <div

@@ -231,10 +231,17 @@ export function ListenClient({ initialSession }: ListenClientProps) {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <span className="text-xs font-medium tracking-widest uppercase text-primary">
             Listen Together
           </span>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            {store.currentAmbient
+              ? store.currentAmbient.name
+              : noSession
+              ? "Start a session"
+              : "Choose a track"}
+          </h1>
           <p className="text-sm text-zinc-500">
             {store.currentAmbient
               ? `Playing ${store.currentAmbient.name}`

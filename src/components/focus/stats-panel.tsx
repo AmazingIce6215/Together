@@ -16,7 +16,7 @@ export function StatsPanel({ me }: StatsPanelProps) {
   );
 
   return (
-    <div className="gradient-border">
+    <div className="gradient-border shadow-elevated">
       <div className="gradient-border-surface rounded-[29px] p-5">
         <h3 className="mb-4 text-sm font-medium text-foreground">Today&apos;s Progress</h3>
 

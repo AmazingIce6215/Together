@@ -5,7 +5,7 @@ export default function WelcomePage() {
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4">
       <main className="flex w-full max-w-6xl flex-col items-center gap-16">
         <div className="flex flex-col items-center gap-6 text-center">
-          <div className="gradient-border">
+          <div className="gradient-border shadow-elevated">
             <div className="gradient-border-surface flex items-center justify-center rounded-[29px] px-5 py-2">
               <span className="text-xs font-medium tracking-widest uppercase text-primary">
                 A space for two

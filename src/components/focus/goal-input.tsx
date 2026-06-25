@@ -28,7 +28,7 @@ export function GoalInput({ label, value, placeholder, onSave }: GoalInputProps)
 
   if (!editing) {
     return (
-      <div className="gradient-border">
+      <div className="gradient-border shadow-elevated">
         <div className="gradient-border-surface rounded-[29px] p-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
@@ -53,7 +53,7 @@ export function GoalInput({ label, value, placeholder, onSave }: GoalInputProps)
   }
 
   return (
-    <div className="gradient-border">
+    <div className="gradient-border shadow-elevated">
       <div className="gradient-border-surface rounded-[29px] p-4">
         <span className="mb-2 block text-xs text-zinc-500">{label}</span>
         <div className="flex gap-2">

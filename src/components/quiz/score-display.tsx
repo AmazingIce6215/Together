@@ -73,7 +73,7 @@ export function ScoreDisplay({
         </div>
       </div>
 
-      <div className="gradient-border">
+      <div className="gradient-border shadow-elevated">
         <div className="gradient-border-surface rounded-[29px] p-6 text-center">
           {isTrivia ? (
             <div>
@@ -106,7 +106,7 @@ export function ScoreDisplay({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className="gradient-border"
+              className="gradient-border shadow-elevated"
             >
               <div className="gradient-border-surface rounded-[29px] p-4">
                 <p className="mb-2 text-sm font-medium leading-relaxed">

@@ -161,14 +161,19 @@ export function FocusClient({ initialSession }: FocusClientProps) {
   if (!store.sessionId) {
     return (
       <div className="flex flex-col items-center justify-center gap-8 p-6 pt-20">
-        <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex flex-col items-center gap-1.5 text-center">
           <span className="text-xs font-medium tracking-widest uppercase text-primary">
             Focus Together
           </span>
-          <p className="max-w-sm text-sm text-zinc-500">
-            Start a shared Pomodoro session. Both you and your partner will see
-            the same timer in real time.
-          </p>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">
+              Start a session
+            </h1>
+            <p className="max-w-sm text-sm text-zinc-500">
+              Start a shared Pomodoro session. Both you and your partner will see
+              the same timer in real time.
+            </p>
+          </div>
         </div>
 
         <motion.button
@@ -184,13 +189,13 @@ export function FocusClient({ initialSession }: FocusClientProps) {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium tracking-widest uppercase text-primary">
           Focus Together
         </span>
-        <p className="text-sm text-zinc-500">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Session #{store.currentSession}
-        </p>
+        </h1>
       </div>
 
       <TimerDisplay

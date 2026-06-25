@@ -31,7 +31,7 @@ export function PlayerBar({
 
   if (!currentAmbient) {
     return (
-      <div className="gradient-border">
+      <div className="gradient-border shadow-elevated">
         <div className="gradient-border-surface flex items-center justify-center rounded-[29px] p-12">
           <p className="text-sm text-zinc-500">
             Select a track to start listening together
@@ -42,7 +42,7 @@ export function PlayerBar({
   }
 
   return (
-    <div className="gradient-border">
+    <div className="gradient-border shadow-elevated">
       <div className="gradient-border-surface rounded-[29px] p-5">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-900">

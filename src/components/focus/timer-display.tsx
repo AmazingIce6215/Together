@@ -32,7 +32,7 @@ export function TimerDisplay({
 
   return (
     <div className="flex flex-col items-center gap-6 py-6">
-      <div className="gradient-border">
+      <div className="gradient-border shadow-elevated">
         <div className="gradient-border-surface flex flex-col items-center gap-6 rounded-[29px] p-8">
           <div className="relative flex h-56 w-56 items-center justify-center">
             <svg className="absolute inset-0 h-full w-full -rotate-90">

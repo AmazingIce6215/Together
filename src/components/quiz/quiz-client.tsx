@@ -109,9 +109,9 @@ export function QuizClient() {
   if (store.phase === "category") {
     return (
       <div className="flex flex-col gap-6 p-6">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <span className="text-xs font-medium tracking-widest uppercase text-primary">Quiz</span>
-          <p className="text-sm text-zinc-500">Choose a category</p>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Choose a category</h1>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -124,7 +124,7 @@ export function QuizClient() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => handleCategorySelect(cat.slug)}
-                className="gradient-border group text-left transition-all duration-150 hover:brightness-110"
+                className="gradient-border shadow-elevated group text-left transition-all duration-150 hover:brightness-110"
               >
                 <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
@@ -153,11 +153,11 @@ export function QuizClient() {
           <ArrowLeft className="h-4 w-4" />
           Back
         </button>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <span className="text-xs font-medium tracking-widest uppercase text-primary">
             {currentCategory?.name ?? "Quiz"}
           </span>
-          <p className="text-sm text-zinc-500">How do you want to play?</p>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">How do you want to play?</h1>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <motion.button
@@ -165,7 +165,7 @@ export function QuizClient() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0 }}
             onClick={() => handleModeSelect("solo")}
-            className="gradient-border group text-left transition-all duration-150 hover:brightness-110"
+            className="gradient-border shadow-elevated group text-left transition-all duration-150 hover:brightness-110"
           >
             <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
@@ -184,7 +184,7 @@ export function QuizClient() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
             onClick={() => handleModeSelect("versus")}
-            className="gradient-border group text-left transition-all duration-150 hover:brightness-110"
+            className="gradient-border shadow-elevated group text-left transition-all duration-150 hover:brightness-110"
           >
             <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
@@ -231,11 +231,11 @@ export function QuizClient() {
           <ArrowLeft className="h-4 w-4" />
           Back
         </button>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <span className="text-xs font-medium tracking-widest uppercase text-primary">
             {currentCategory?.name ?? "Quiz"} &middot; Versus
           </span>
-          <p className="text-sm text-zinc-500">Choose a question type</p>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Choose a question type</h1>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {types.map((t, i) => (
@@ -245,7 +245,7 @@ export function QuizClient() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => handleTypeSelect(t.slug)}
-              className="gradient-border group text-left transition-all duration-150 hover:brightness-110"
+              className="gradient-border shadow-elevated group text-left transition-all duration-150 hover:brightness-110"
             >
               <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
                 <div className="flex flex-col gap-0.5">

@@ -28,7 +28,7 @@ export function QuestionCard({ question, onAnswer, disabled }: QuestionCardProps
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="gradient-border">
+      <div className="gradient-border shadow-elevated">
         <div className="gradient-border-surface rounded-[29px] p-6">
           <p className="text-center text-lg leading-relaxed text-foreground">{question.question}</p>
           {question.type === "would_you_rather" && (
