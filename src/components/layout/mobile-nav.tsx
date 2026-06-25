@@ -25,12 +25,12 @@ export function MobileNav() {
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={() => setOpen(false)}
       />
-      <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl border-t border-zinc-800 bg-black p-4 pb-8">
+      <div className="absolute bottom-0 left-0 right-0 rounded-t-[30px] border-t border-border bg-black p-4 pb-8">
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-sm font-semibold text-zinc-100">Navigation</span>
+          <span className="text-sm font-semibold text-foreground">Navigation</span>
           <button
             onClick={() => setOpen(false)}
-            className="rounded-lg p-1 text-zinc-400"
+            className="rounded-[30px] p-1 text-zinc-500"
           >
             <X className="h-4 w-4" />
           </button>
@@ -47,10 +47,10 @@ export function MobileNav() {
                 href={link.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors",
+                  "flex items-center gap-3 rounded-[30px] px-3 py-3 text-sm transition-all duration-150",
                   isActive
-                    ? "bg-zinc-100 text-black"
-                    : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-300"
+                    ? "bg-primary text-text-primary font-medium"
+                    : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />

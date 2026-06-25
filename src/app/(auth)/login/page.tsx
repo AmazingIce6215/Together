@@ -10,13 +10,13 @@ export default async function LoginPage({
   return (
     <form action={signIn} className="flex flex-col gap-4">
       {error && (
-        <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+        <p className="rounded-[30px] bg-red-500/10 px-3 py-2 text-sm text-red-400">
           {error}
         </p>
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-xs font-medium text-zinc-400">
+        <label htmlFor="email" className="text-xs font-medium text-zinc-500">
           Email
         </label>
         <input
@@ -25,12 +25,12 @@ export default async function LoginPage({
           type="email"
           required
           placeholder="you@example.com"
-          className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-colors focus:border-zinc-600"
+          className="rounded-[30px] border border-border bg-zinc-900/50 px-4 py-2.5 text-sm text-foreground placeholder-zinc-600 outline-none transition-all duration-150 focus:border-zinc-600"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-xs font-medium text-zinc-400">
+        <label htmlFor="password" className="text-xs font-medium text-zinc-500">
           Password
         </label>
         <input
@@ -39,20 +39,20 @@ export default async function LoginPage({
           type="password"
           required
           placeholder="••••••••"
-          className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-colors focus:border-zinc-600"
+          className="rounded-[30px] border border-border bg-zinc-900/50 px-4 py-2.5 text-sm text-foreground placeholder-zinc-600 outline-none transition-all duration-150 focus:border-zinc-600"
         />
       </div>
 
       <button
         type="submit"
-        className="mt-2 rounded-lg bg-zinc-100 px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-200"
+        className="mt-2 rounded-[30px] bg-primary px-4 py-2.5 text-sm font-medium text-text-primary transition-all duration-150 hover:brightness-110"
       >
         Sign in
       </button>
 
-      <p className="text-center text-xs text-zinc-500">
+      <p className="text-center text-xs text-zinc-600">
         Don&apos;t have an account?{" "}
-        <a href="/signup" className="text-zinc-300 hover:text-zinc-100 underline underline-offset-2">
+        <a href="/signup" className="text-primary hover:brightness-110 underline underline-offset-2">
           Create one
         </a>
       </p>

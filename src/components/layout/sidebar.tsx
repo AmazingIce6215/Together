@@ -38,16 +38,16 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-dvh flex-col border-r border-zinc-800/50 bg-black transition-all duration-300",
+        "fixed left-0 top-0 z-40 flex h-dvh flex-col border-r border-border transition-all duration-150",
         sidebarOpen ? "w-56" : "w-16"
       )}
     >
-      <div className="flex h-14 items-center gap-3 border-b border-zinc-800/50 px-4">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-zinc-100">
-          <Heart className="h-3.5 w-3.5 text-black" />
+      <div className="flex h-14 items-center gap-3 border-b border-border px-4">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary">
+          <Heart className="h-3.5 w-3.5 text-text-primary" />
         </div>
         {sidebarOpen && (
-          <span className="text-sm font-semibold tracking-tight">Together</span>
+          <span className="text-sm font-semibold tracking-tight text-foreground">Together</span>
         )}
       </div>
 
@@ -61,10 +61,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-3 rounded-[30px] px-3 py-2 text-sm transition-all duration-150",
                 isActive
-                  ? "bg-zinc-100 text-black"
-                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-300"
+                  ? "bg-primary text-text-primary font-medium"
+                  : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -74,10 +74,10 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-zinc-800/50 p-2">
+      <div className="border-t border-border p-2">
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-300"
+          className="flex w-full items-center gap-3 rounded-[30px] px-3 py-2 text-sm text-zinc-600 transition-all duration-150 hover:bg-zinc-900 hover:text-zinc-400"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarOpen && <span>Sign out</span>}

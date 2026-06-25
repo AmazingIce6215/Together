@@ -20,7 +20,7 @@ export default async function DashboardLayout({
       <Sidebar />
       <Topbar />
       <MobileNav />
-      <main className="flex-1 pt-14 pl-16 transition-all duration-300">
+      <main className="flex-1 pt-14 pl-16">
         {children}
       </main>
     </div>
