@@ -28,22 +28,24 @@ export function TrackList({ sounds, activeId, onSelect }: TrackListProps) {
             key={sound.id}
             whileTap={{ scale: 0.97 }}
             onClick={() => onSelect(sound)}
-            className={`flex flex-col items-center gap-2 rounded-2xl border p-5 transition-colors ${
+            className={`rounded-[30px] border p-5 transition-all duration-150 ${
               isActive
-                ? "border-violet-500/50 bg-violet-500/10"
-                : "border-zinc-800/50 hover:bg-zinc-900"
+                ? "border-primary bg-primary/10"
+                : "border-border hover:border-zinc-600 hover:bg-zinc-900/50"
             }`}
           >
-            <span className="text-2xl">
-              {ICON_MAP[sound.icon] || "🎵"}
-            </span>
-            <span
-              className={`text-sm font-medium ${
-                isActive ? "text-violet-300" : "text-zinc-300"
-              }`}
-            >
-              {sound.name}
-            </span>
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-2xl">
+                {ICON_MAP[sound.icon] || "🎵"}
+              </span>
+              <span
+                className={`text-sm font-medium ${
+                  isActive ? "text-primary" : "text-zinc-400"
+                }`}
+              >
+                {sound.name}
+              </span>
+            </div>
           </motion.button>
         );
       })}

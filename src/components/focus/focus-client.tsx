@@ -57,7 +57,6 @@ export function FocusClient({ initialSession }: FocusClientProps) {
     }
   }, [initialSession]);
 
-  // Identify me and partner from session data
   useEffect(() => {
     if (!isLoaded || !user || !initialSession) return;
     const myPart = initialSession.participants.find(
@@ -163,13 +162,10 @@ export function FocusClient({ initialSession }: FocusClientProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-8 p-6 pt-20">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10">
-            <TimerIcon className="h-7 w-7 text-violet-400" />
-          </div>
-          <h1 className="text-xl font-semibold tracking-tight">
+          <span className="text-xs font-medium tracking-widest uppercase text-primary">
             Focus Together
-          </h1>
-          <p className="max-w-sm text-sm text-zinc-400">
+          </span>
+          <p className="max-w-sm text-sm text-zinc-500">
             Start a shared Pomodoro session. Both you and your partner will see
             the same timer in real time.
           </p>
@@ -178,7 +174,7 @@ export function FocusClient({ initialSession }: FocusClientProps) {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={handleStart}
-          className="rounded-xl bg-violet-500 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-violet-400"
+          className="rounded-[30px] bg-primary px-8 py-3 text-sm font-medium text-text-primary transition-all duration-150 hover:brightness-110"
         >
           Start Focus Session
         </motion.button>
@@ -189,10 +185,10 @@ export function FocusClient({ initialSession }: FocusClientProps) {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">
+        <span className="text-xs font-medium tracking-widest uppercase text-primary">
           Focus Together
-        </h1>
-        <p className="text-sm text-zinc-400">
+        </span>
+        <p className="text-sm text-zinc-500">
           Session #{store.currentSession}
         </p>
       </div>
@@ -207,7 +203,7 @@ export function FocusClient({ initialSession }: FocusClientProps) {
         breakDuration={store.breakDuration}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {me && (
           <GoalInput
             label="Your task"
@@ -230,23 +226,5 @@ export function FocusClient({ initialSession }: FocusClientProps) {
 
       {me && <StatsPanel me={me} />}
     </div>
-  );
-}
-
-function TimerIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
   );
 }

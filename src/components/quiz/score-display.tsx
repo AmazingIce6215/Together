@@ -33,7 +33,6 @@ export function ScoreDisplay({
   const isTrivia = category === "trivia";
   const isVersus = mode === "versus";
 
-  // Trivia: 1pt per correct answer
   let triviaScore = 0;
   let triviaTotal = 0;
   if (isTrivia) {
@@ -46,7 +45,6 @@ export function ScoreDisplay({
     }
   }
 
-  // Subjective: calculate average rating if any
   const ratedQuestions = questions.filter((q) => {
     const a = playerAAnswers[q.id];
     return a && typeof a.rating === "number";
@@ -65,37 +63,36 @@ export function ScoreDisplay({
       animate={{ opacity: 1, y: 0 }}
       className="mx-auto flex w-full max-w-2xl flex-col gap-6 py-6"
     >
-      {/* Header */}
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-500/10">
-          <Icon className="h-8 w-8 text-yellow-400" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
+          <Icon className="h-8 w-8 text-primary" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold">Quiz Complete!</h2>
-          <p className="mt-1 text-sm text-zinc-400">{questions.length} questions answered</p>
+          <h2 className="text-xl font-semibold text-foreground">Quiz Complete!</h2>
+          <p className="mt-1 text-sm text-zinc-500">{questions.length} questions answered</p>
         </div>
       </div>
 
-      {/* Score summary */}
-      <div className="rounded-2xl border border-zinc-800/50 p-6 text-center">
-        {isTrivia ? (
-          <div>
-            <p className="text-4xl font-bold">{triviaScore}/{triviaTotal}</p>
-            <p className="mt-1 text-sm text-zinc-500">Correct answers</p>
-          </div>
-        ) : avgRating !== null ? (
-          <div>
-            <p className="text-4xl font-bold">{avgRating} / 3</p>
-            <p className="mt-1 text-sm text-zinc-500">Average rating</p>
-          </div>
-        ) : (
-          <p className="text-sm text-zinc-500">
-            {isVersus ? "Compare your answers below" : "Review your answers below"}
-          </p>
-        )}
+      <div className="gradient-border">
+        <div className="gradient-border-surface rounded-[29px] p-6 text-center">
+          {isTrivia ? (
+            <div>
+              <p className="text-4xl font-bold text-foreground">{triviaScore}/{triviaTotal}</p>
+              <p className="mt-1 text-sm text-zinc-500">Correct answers</p>
+            </div>
+          ) : avgRating !== null ? (
+            <div>
+              <p className="text-4xl font-bold text-foreground">{avgRating} / 3</p>
+              <p className="mt-1 text-sm text-zinc-500">Average rating</p>
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-500">
+              {isVersus ? "Compare your answers below" : "Review your answers below"}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Answer review */}
       <div className="flex flex-col gap-4">
         <h3 className="text-sm font-medium text-zinc-400">Your answers</h3>
         {questions.map((q, i) => {
@@ -109,44 +106,45 @@ export function ScoreDisplay({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className="rounded-2xl border border-zinc-800/50 p-4"
+              className="gradient-border"
             >
-              <p className="mb-2 text-sm font-medium leading-relaxed">
-                <span className="text-zinc-500">Q{i + 1}. </span>
-                {q.question}
-              </p>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500">You:</span>
-                  <span
-                    className={`rounded-lg px-2.5 py-1 text-sm ${
-                      isCorrect
-                        ? "bg-emerald-500/10 text-emerald-300"
-                        : "bg-zinc-800/50 text-zinc-200"
-                    }`}
-                  >
-                    {a?.answer ?? "—"}
-                  </span>
-                  {isCorrect && <Trophy className="h-3.5 w-3.5 text-emerald-400" />}
-                </div>
-                {isVersus && b && (
+              <div className="gradient-border-surface rounded-[29px] p-4">
+                <p className="mb-2 text-sm font-medium leading-relaxed">
+                  <span className="text-zinc-500">Q{i + 1}. </span>
+                  <span className="text-foreground">{q.question}</span>
+                </p>
+                <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-500">Partner:</span>
-                    <span className="rounded-lg bg-zinc-800/50 px-2.5 py-1 text-sm text-zinc-200">
-                      {b.answer}
+                    <span className="text-xs text-zinc-500">You:</span>
+                    <span
+                      className={`rounded-[30px] px-2.5 py-1 text-sm ${
+                        isCorrect
+                          ? "bg-tertiary/20 text-tertiary"
+                          : "bg-zinc-900 text-zinc-300"
+                      }`}
+                    >
+                      {a?.answer ?? "—"}
                     </span>
+                    {isCorrect && <Trophy className="h-3.5 w-3.5 text-tertiary" />}
                   </div>
-                )}
+                  {isVersus && b && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-500">Partner:</span>
+                      <span className="rounded-[30px] bg-zinc-900 px-2.5 py-1 text-sm text-zinc-300">
+                        {b.answer}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Restart */}
       <button
         onClick={onRestart}
-        className="mx-auto mt-2 rounded-xl bg-zinc-100 px-8 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-200"
+        className="mx-auto mt-2 rounded-[30px] bg-primary px-8 py-2.5 text-sm font-medium text-text-primary transition-all duration-150 hover:brightness-110"
       >
         Play again
       </button>

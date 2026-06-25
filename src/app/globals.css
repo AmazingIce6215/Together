@@ -13,7 +13,8 @@
   --color-text-secondary: #ffffff;
 
   --color-border: #131313;
-  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  --color-surface: #000000;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -56,14 +57,19 @@ body {
 .gradient-border {
   position: relative;
   border-radius: 30px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.15));
   padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.15)),
+              linear-gradient(rgb(255, 92, 53), rgb(255, 92, 53));
 }
 
 .gradient-border-surface {
   border-radius: 29px;
   background: #000000;
   height: 100%;
+}
+
+.shadow-elevated {
+  box-shadow: rgba(169, 200, 255, 0.3) 0px 25px 50px 0px;
 }
 
 ::-webkit-scrollbar {

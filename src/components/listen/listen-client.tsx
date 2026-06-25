@@ -50,7 +50,6 @@ export function ListenClient({ initialSession }: ListenClientProps) {
     }
   }, [initialSession]);
 
-  // Load partner info
   useEffect(() => {
     if (!isLoaded || !user || !initialSession) return;
 
@@ -233,10 +232,10 @@ export function ListenClient({ initialSession }: ListenClientProps) {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">
+          <span className="text-xs font-medium tracking-widest uppercase text-primary">
             Listen Together
-          </h1>
-          <p className="text-sm text-zinc-400">
+          </span>
+          <p className="text-sm text-zinc-500">
             {store.currentAmbient
               ? `Playing ${store.currentAmbient.name}`
               : noSession
@@ -248,14 +247,14 @@ export function ListenClient({ initialSession }: ListenClientProps) {
         {noSession ? (
           <button
             onClick={handleStartSession}
-            className="rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-400"
+            className="rounded-[30px] bg-primary px-5 py-2.5 text-sm font-medium text-text-primary transition-all duration-150 hover:brightness-110"
           >
             Start Session
           </button>
         ) : (
           <button
             onClick={() => setShowTracks(!showTracks)}
-            className="rounded-xl border border-zinc-800 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-900"
+            className="rounded-[30px] border border-border px-4 py-2 text-sm text-zinc-400 transition-all duration-150 hover:border-zinc-600 hover:text-zinc-300"
           >
             {showTracks ? "Close" : "Browse Tracks"}
           </button>
@@ -291,10 +290,10 @@ export function ListenClient({ initialSession }: ListenClientProps) {
       />
 
       {store.currentAmbient && (
-        <div className="rounded-xl border border-amber-900/30 bg-amber-950/10 px-4 py-3">
+        <div className="rounded-[30px] border border-amber-900/30 bg-amber-950/10 px-4 py-3">
           <p className="text-xs text-amber-400/80">
             Add audio files to{" "}
-            <code className="rounded bg-zinc-900 px-1.5 py-0.5">
+            <code className="rounded-[30px] bg-zinc-900 px-1.5 py-0.5">
               public/audio/ambient/
             </code>{" "}
             to enable playback.{" "}

@@ -47,7 +47,6 @@ export function QuizClient() {
       store.setMode(mode);
 
       if (mode === "solo") {
-        // Solo: load multiple_choice questions and start game
         if (slug === "trivia") {
           const result = await generateTrivia(8);
           if ("questions" in result) {
@@ -60,7 +59,6 @@ export function QuizClient() {
         }
         store.setPhase("game");
       } else {
-        // Versus: show type picker first
         store.setPhase("type");
       }
     },
@@ -108,13 +106,12 @@ export function QuizClient() {
     store.reset();
   }, [store]);
 
-  // ── Category picker screen ──────────────────────────
   if (store.phase === "category") {
     return (
       <div className="flex flex-col gap-6 p-6">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">Quiz</h1>
-          <p className="text-sm text-zinc-400">Choose a category</p>
+          <span className="text-xs font-medium tracking-widest uppercase text-primary">Quiz</span>
+          <p className="text-sm text-zinc-500">Choose a category</p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -127,17 +124,16 @@ export function QuizClient() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => handleCategorySelect(cat.slug)}
-                className="group flex flex-col items-start gap-3 rounded-2xl border border-zinc-800/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900/50"
+                className="gradient-border group text-left transition-all duration-150 hover:brightness-110"
               >
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: `${cat.color}15` }}
-                >
-                  <Icon className="h-5 w-5" style={{ color: cat.color }} />
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{cat.name}</span>
-                  <span className="text-xs text-zinc-500">{cat.description}</span>
+                <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-foreground">{cat.name}</span>
+                    <span className="text-xs text-zinc-500">{cat.description}</span>
+                  </div>
                 </div>
               </motion.button>
             );
@@ -147,22 +143,21 @@ export function QuizClient() {
     );
   }
 
-  // ── Mode picker screen ──────────────────────────────
   if (store.phase === "mode") {
     return (
       <div className="flex flex-col gap-6 p-6">
         <button
           onClick={() => store.setPhase("category")}
-          className="flex items-center gap-1.5 self-start text-sm text-zinc-500 transition-colors hover:text-zinc-300"
+          className="flex items-center gap-1.5 self-start text-sm text-zinc-500 transition-colors duration-150 hover:text-zinc-300"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </button>
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">
+          <span className="text-xs font-medium tracking-widest uppercase text-primary">
             {currentCategory?.name ?? "Quiz"}
-          </h1>
-          <p className="text-sm text-zinc-400">How do you want to play?</p>
+          </span>
+          <p className="text-sm text-zinc-500">How do you want to play?</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <motion.button
@@ -170,16 +165,18 @@ export function QuizClient() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0 }}
             onClick={() => handleModeSelect("solo")}
-            className="flex flex-col items-start gap-3 rounded-2xl border border-zinc-800/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900/50"
+            className="gradient-border group text-left transition-all duration-150 hover:brightness-110"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800/50">
-              <User className="h-5 w-5 text-zinc-300" />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Solo</span>
-              <span className="text-xs text-zinc-500">
-                Answer questions and see how you score
-              </span>
+            <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
+                <User className="h-5 w-5 text-zinc-300" />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium text-foreground">Solo</span>
+                <span className="text-xs text-zinc-500">
+                  Answer questions and see how you score
+                </span>
+              </div>
             </div>
           </motion.button>
           <motion.button
@@ -187,16 +184,18 @@ export function QuizClient() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
             onClick={() => handleModeSelect("versus")}
-            className="flex flex-col items-start gap-3 rounded-2xl border border-zinc-800/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900/50"
+            className="gradient-border group text-left transition-all duration-150 hover:brightness-110"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800/50">
-              <Users className="h-5 w-5 text-zinc-300" />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Versus</span>
-              <span className="text-xs text-zinc-500">
-                Both partners answer, then compare
-              </span>
+            <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
+                <Users className="h-5 w-5 text-zinc-300" />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium text-foreground">Versus</span>
+                <span className="text-xs text-zinc-500">
+                  Both partners answer, then compare
+                </span>
+              </div>
             </div>
           </motion.button>
         </div>
@@ -204,7 +203,6 @@ export function QuizClient() {
     );
   }
 
-  // ── Type picker screen (Versus only) ────────────────
   if (store.phase === "type") {
     const types: { slug: QuestionType; label: string; description: string }[] = [
       {
@@ -228,16 +226,16 @@ export function QuizClient() {
       <div className="flex flex-col gap-6 p-6">
         <button
           onClick={() => store.setPhase("mode")}
-          className="flex items-center gap-1.5 self-start text-sm text-zinc-500 transition-colors hover:text-zinc-300"
+          className="flex items-center gap-1.5 self-start text-sm text-zinc-500 transition-colors duration-150 hover:text-zinc-300"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </button>
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">
+          <span className="text-xs font-medium tracking-widest uppercase text-primary">
             {currentCategory?.name ?? "Quiz"} &middot; Versus
-          </h1>
-          <p className="text-sm text-zinc-400">Choose a question type</p>
+          </span>
+          <p className="text-sm text-zinc-500">Choose a question type</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {types.map((t, i) => (
@@ -247,11 +245,13 @@ export function QuizClient() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => handleTypeSelect(t.slug)}
-              className="flex flex-col items-start gap-3 rounded-2xl border border-zinc-800/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900/50"
+              className="gradient-border group text-left transition-all duration-150 hover:brightness-110"
             >
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">{t.label}</span>
-                <span className="text-xs text-zinc-500">{t.description}</span>
+              <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium text-foreground">{t.label}</span>
+                  <span className="text-xs text-zinc-500">{t.description}</span>
+                </div>
               </div>
             </motion.button>
           ))}
@@ -260,7 +260,6 @@ export function QuizClient() {
     );
   }
 
-  // ── Summary screen ──────────────────────────────────
   if (store.phase === "summary") {
     return (
       <div className="p-6">
@@ -276,7 +275,6 @@ export function QuizClient() {
     );
   }
 
-  // ── Game screen ─────────────────────────────────────
   const isPlayerATurn = store.isPlayerATurn;
   const isLastQuestion = store.currentIndex >= store.questions.length - 1;
   const totalQuestions = store.questions.length;
@@ -289,12 +287,11 @@ export function QuizClient() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Progress */}
       <div className="flex items-center gap-3">
         <div className="flex-1">
-          <div className="h-1 overflow-hidden rounded-full bg-zinc-800">
+          <div className="h-1 overflow-hidden rounded-full bg-zinc-900">
             <div
-              className="h-full rounded-full bg-zinc-100 transition-all duration-500"
+              className="h-full rounded-full bg-primary transition-all duration-700"
               style={{
                 width: `${((store.currentIndex + 1) / totalQuestions) * 100}%`,
               }}
@@ -306,14 +303,12 @@ export function QuizClient() {
         </span>
       </div>
 
-      {/* Turn indicator (versus) */}
       {turnLabel && (
         <p className="text-center text-xs font-medium text-zinc-500">
           {turnLabel}
         </p>
       )}
 
-      {/* Question card */}
       {currentQuestion && (
         <AnimatePresence mode="wait">
           <motion.div
@@ -331,7 +326,6 @@ export function QuizClient() {
         </AnimatePresence>
       )}
 
-      {/* Next button — show after answering */}
       {currentQuestion && (() => {
         const answered = store.isPlayerATurn
           ? !!store.playerAAnswers[currentQuestion.id]
@@ -349,7 +343,7 @@ export function QuizClient() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             onClick={handleNext}
-            className="mx-auto rounded-xl bg-zinc-100 px-8 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-200"
+            className="mx-auto rounded-[30px] bg-primary px-8 py-2.5 text-sm font-medium text-text-primary transition-all duration-150 hover:brightness-110"
           >
             {buttonLabel}
           </motion.button>
