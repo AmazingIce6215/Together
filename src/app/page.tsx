@@ -1,4 +1,4 @@
-import { Gamepad2, Music, Timer, Play, BookOpen, PenLine, ArrowRight } from "lucide-react";
+import { Gamepad2, Music, Timer, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCouple } from "@/actions/couple.actions";
@@ -27,36 +27,6 @@ const togetherFeatures = [
     description: "Study together with a shared Pomodoro timer",
     href: "/focus",
     icon: Timer,
-  },
-];
-
-const medResources = [
-  {
-    number: "01",
-    title: "Watch",
-    description: "Video lectures from top medical educators",
-    href: "/watch",
-    icon: Play,
-    accent: "bg-primary",
-    textAccent: "text-primary",
-  },
-  {
-    number: "02",
-    title: "Read",
-    description: "Notes, textbooks, and radiology references",
-    href: "/read",
-    icon: BookOpen,
-    accent: "bg-secondary",
-    textAccent: "text-secondary",
-  },
-  {
-    number: "03",
-    title: "Practice",
-    description: "Question banks and exam prep resources",
-    href: "/practice",
-    icon: PenLine,
-    accent: "bg-tertiary",
-    textAccent: "text-tertiary",
   },
 ];
 
@@ -105,51 +75,7 @@ export default async function HomePage({
           </Link>
         </div>
 
-        <div className="w-full max-w-4xl">
-          <div className="mb-6 flex flex-col gap-1.5 text-center">
-            <span className="text-xs font-medium tracking-widest uppercase text-zinc-600">
-              Also explore
-            </span>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">
-              Medical Study Resources
-            </h2>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {medResources.map((pillar) => {
-              const Icon = pillar.icon;
-              return (
-                <Link
-                  key={pillar.href}
-                  href={pillar.href}
-                  className="gradient-border shadow-elevated group transition-all duration-150 hover:brightness-110"
-                >
-                  <div className="gradient-border-surface flex flex-col rounded-[29px] p-6">
-                    <div className="flex items-start justify-between">
-                      <span className="text-[64px] font-semibold leading-[0.8] tracking-[-0.04em] text-zinc-800">
-                        {pillar.number}
-                      </span>
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${pillar.accent} transition-transform duration-150 group-hover:scale-110`}>
-                        <Icon className="h-5 w-5 text-text-primary" />
-                      </div>
-                    </div>
-                    <div className="mt-2 flex flex-col gap-2">
-                      <h2 className={`text-lg font-semibold tracking-tight ${pillar.textAccent}`}>
-                        {pillar.title}
-                      </h2>
-                      <p className="text-sm leading-relaxed text-zinc-500">
-                        {pillar.description}
-                      </p>
-                      <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary transition-all duration-150 group-hover:gap-1.5">
-                        Explore resources
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+
       </div>
     );
   }
@@ -305,56 +231,7 @@ export default async function HomePage({
         </div>
       </div>
 
-      {/* ── MedResources section ──────────────────────── */}
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium tracking-widest uppercase text-zinc-600">
-            Medical Study Resources
-          </span>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">
-            Three ways to make an impact
-          </h2>
-          <p className="text-sm text-zinc-500">
-            Everything you need for medical school — video lectures, notes, textbooks, and question banks.
-          </p>
-        </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          {medResources.map((pillar) => {
-            const Icon = pillar.icon;
-            return (
-              <Link
-                key={pillar.href}
-                href={pillar.href}
-                className="gradient-border shadow-elevated group transition-all duration-150 hover:brightness-110"
-              >
-                <div className="gradient-border-surface flex flex-col rounded-[29px] p-6">
-                  <div className="flex items-start justify-between">
-                    <span className="text-[64px] font-semibold leading-[0.8] tracking-[-0.04em] text-zinc-800">
-                      {pillar.number}
-                    </span>
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${pillar.accent} transition-transform duration-150 group-hover:scale-110`}>
-                      <Icon className="h-5 w-5 text-text-primary" />
-                    </div>
-                  </div>
-                  <div className="mt-2 flex flex-col gap-2">
-                    <h2 className={`text-lg font-semibold tracking-tight ${pillar.textAccent}`}>
-                      {pillar.title}
-                    </h2>
-                    <p className="text-sm leading-relaxed text-zinc-500">
-                      {pillar.description}
-                    </p>
-                    <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary transition-all duration-150 group-hover:gap-1.5">
-                      Explore resources
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }

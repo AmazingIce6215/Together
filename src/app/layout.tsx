@@ -24,9 +24,6 @@ const navLinks = [
   { href: "/quiz", label: "Quiz" },
   { href: "/listen", label: "Listen" },
   { href: "/focus", label: "Focus" },
-  { href: "/watch", label: "Watch" },
-  { href: "/read", label: "Read" },
-  { href: "/practice", label: "Practice" },
 ];
 
 export default function RootLayout({
