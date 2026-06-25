@@ -71,7 +71,7 @@ export function CreateRoomForm() {
         {loading ? "Creating..." : "Create a room"}
       </button>
       <p className="text-xs text-zinc-600">
-        You'll get an invite code to share with your partner
+        You&apos;ll get an invite code to share with your partner
       </p>
     </div>
   );

@@ -69,7 +69,7 @@ export async function updatePlaybackState(playback: {
   currentAmbientId?: string | null;
   progressMs?: number;
 }) {
-  const userId = await requireUserId();
+  await requireUserId();
 
   const supabase = await createClient();
 

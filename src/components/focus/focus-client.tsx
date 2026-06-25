@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, startTransition } from "react";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useFocusStore } from "@/lib/store/focus-store";
@@ -38,36 +38,31 @@ interface FocusClientProps {
 export function FocusClient({ initialSession }: FocusClientProps) {
   const store = useFocusStore();
   const [user, setUser] = useState<{ id: string } | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [partner, setPartner] = useState<Participant | null>(null);
-  const [me, setMe] = useState<Participant | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [me, setMe] = useState<Participant | null>(null);
+  const [partner, setPartner] = useState<Participant | null>(null);
+
+  useEffect(() => {
+    if (!user || !initialSession) return;
+    const myPart = initialSession.participants.find((p) => p.user_id === user.id);
+    const partnerPart = initialSession.participants.find((p) => p.user_id !== user.id);
+    startTransition(() => {
+      if (myPart) setMe(myPart);
+      if (partnerPart) setPartner(partnerPart);
+    });
+  }, [initialSession, user]);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ? { id: data.user.id } : null);
-      setIsLoaded(true);
     });
   }, []);
 
   useEffect(() => {
-    if (initialSession) {
-      store.setSession(initialSession);
-    }
+    if (!initialSession) return;
+    store.setSession(initialSession);
   }, [initialSession]);
-
-  useEffect(() => {
-    if (!isLoaded || !user || !initialSession) return;
-    const myPart = initialSession.participants.find(
-      (p) => p.user_id === user.id
-    );
-    const partnerPart = initialSession.participants.find(
-      (p) => p.user_id !== user.id
-    );
-    if (myPart) setMe(myPart);
-    if (partnerPart) setPartner(partnerPart);
-  }, [initialSession, user, isLoaded]);
 
   useEffect(() => {
     if (store.isRunning) {

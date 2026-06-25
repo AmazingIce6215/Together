@@ -14,13 +14,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MedResources — Study Resources for Medical Students",
+  title: "Together — A space for two",
   description:
-    "Curated collection of video lectures, notes, textbooks, and question banks for medical students.",
+    "A private online space for long-distance couples to spend quality time together.",
 };
 
 const navLinks = [
   { href: "/", label: "Home" },
+  { href: "/quiz", label: "Quiz" },
+  { href: "/listen", label: "Listen" },
+  { href: "/focus", label: "Focus" },
   { href: "/watch", label: "Watch" },
   { href: "/read", label: "Read" },
   { href: "/practice", label: "Practice" },
@@ -38,9 +41,9 @@ export default function RootLayout({
           <header className="flex h-16 items-center justify-between border-b border-border">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary">
-                <span className="text-xs font-bold text-text-primary">M</span>
+                <span className="text-xs font-bold text-text-primary">T</span>
               </div>
-              <span className="text-sm font-semibold tracking-tight">MedResources</span>
+              <span className="text-sm font-semibold tracking-tight">Together</span>
             </Link>
             <nav className="flex items-center gap-1">
               {navLinks.map((link) => (
@@ -56,7 +59,7 @@ export default function RootLayout({
           </header>
           <main className="flex-1">{children}</main>
           <footer className="border-t border-border py-4 text-center text-xs text-zinc-600">
-            MedResources &mdash; Free study resources for medical students
+            Together &mdash; A private space for two
           </footer>
         </div>
       </body>
