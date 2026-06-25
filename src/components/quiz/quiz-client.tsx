@@ -120,11 +120,18 @@ export function QuizClient() {
             return (
               <motion.button
                 key={cat.slug}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 240,
+                  damping: 26,
+                  delay: i * 0.04,
+                }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => handleCategorySelect(cat.slug)}
-                className="gradient-border shadow-elevated group text-left transition-all duration-150 hover:brightness-110"
+                className="gradient-border-static shadow-elevated group text-left"
               >
                 <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
@@ -161,14 +168,16 @@ export function QuizClient() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <motion.button
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0 }}
+            transition={{ type: "spring", stiffness: 240, damping: 26 }}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => handleModeSelect("solo")}
-            className="gradient-border shadow-elevated group text-left transition-all duration-150 hover:brightness-110"
+            className="gradient-border-static shadow-elevated group text-left"
           >
             <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 transition-transform duration-500 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-[15deg] group-hover:scale-110">
                 <User className="h-5 w-5 text-zinc-300" />
               </div>
               <div className="flex flex-col gap-0.5">
@@ -180,14 +189,16 @@ export function QuizClient() {
             </div>
           </motion.button>
           <motion.button
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
+            transition={{ type: "spring", stiffness: 240, damping: 26, delay: 0.05 }}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => handleModeSelect("versus")}
-            className="gradient-border shadow-elevated group text-left transition-all duration-150 hover:brightness-110"
+            className="gradient-border-static shadow-elevated group text-left"
           >
             <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 transition-transform duration-500 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-[15deg] group-hover:scale-110">
                 <Users className="h-5 w-5 text-zinc-300" />
               </div>
               <div className="flex flex-col gap-0.5">
@@ -241,11 +252,18 @@ export function QuizClient() {
           {types.map((t, i) => (
             <motion.button
               key={t.slug}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{
+                type: "spring",
+                stiffness: 240,
+                damping: 26,
+                delay: i * 0.04,
+              }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => handleTypeSelect(t.slug)}
-              className="gradient-border shadow-elevated group text-left transition-all duration-150 hover:brightness-110"
+              className="gradient-border-static shadow-elevated group text-left"
             >
               <div className="gradient-border-surface flex flex-col items-start gap-3 rounded-[29px] p-5">
                 <div className="flex flex-col gap-0.5">
@@ -290,15 +308,17 @@ export function QuizClient() {
       <div className="flex items-center gap-3">
         <div className="flex-1">
           <div className="h-1 overflow-hidden rounded-full bg-zinc-900">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-700"
-              style={{
+            <motion.div
+              className="h-full rounded-full bg-primary"
+              initial={false}
+              animate={{
                 width: `${((store.currentIndex + 1) / totalQuestions) * 100}%`,
               }}
+              transition={{ type: "spring", stiffness: 120, damping: 20 }}
             />
           </div>
         </div>
-        <span className="text-xs text-zinc-500">
+        <span className="text-xs tabular-nums text-zinc-500">
           {store.currentIndex + 1} / {totalQuestions}
         </span>
       </div>
@@ -310,13 +330,22 @@ export function QuizClient() {
       )}
 
       {currentQuestion && (
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={currentQuestion.id + (isPlayerATurn ? "-a" : "-b")}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, x: 40, filter: "blur(6px)" }}
+            animate={{
+              opacity: 1,
+              x: 0,
+              filter: "blur(0px)",
+              transition: { type: "spring", stiffness: 240, damping: 28, mass: 0.7 },
+            }}
+            exit={{
+              opacity: 0,
+              x: -30,
+              filter: "blur(4px)",
+              transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] },
+            }}
           >
             <QuestionCard
               question={currentQuestion}
@@ -340,10 +369,13 @@ export function QuizClient() {
 
         return (
           <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.96 }}
             onClick={handleNext}
-            className="mx-auto rounded-[30px] bg-primary px-8 py-2.5 text-sm font-medium text-text-primary transition-all duration-150 hover:brightness-110"
+            className="mx-auto rounded-[30px] bg-primary px-8 py-2.5 text-sm font-medium text-text-primary transition-shadow duration-300 hover:shadow-[0_0_28px_-6px_rgba(255,230,108,0.7)]"
           >
             {buttonLabel}
           </motion.button>
